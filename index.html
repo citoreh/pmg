@@ -755,6 +755,11 @@
                 <button class="role-btn" data-role="composer">🎹 آهنگساز</button>
                 <button class="role-btn" data-role="arranger">🎼 تنظیم‌کننده</button>
             </div>
+            <div style="margin-top: 30px; padding: 20px; background: rgba(212, 175, 55, 0.1); border-radius: 10px; text-align: right;">
+                <p style="color: #A0A0A0; font-size: 0.9em;">
+                    ℹ️ اگر دکمه‌ها کار نمی‌کنند، کنسول مرورگر را باز کنید (F12) و پیام‌های خطا را بررسی کنید.
+                </p>
+            </div>
         </div>
 
         <div id="gameScreen" style="display: none;">
@@ -921,103 +926,150 @@
         }
 
         async function loadTracks() {
+            console.log('Starting to load data...');
+            
             try {
                 // Load artists details (Sheet 1)
-                const artistsResponse = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTBw8UmoEPDQ4zAiDWe3GQrkvJxTZOfNcF-GN_ZFghvrWh7EC7HbIa4itTbgOYcGCQM1WlEYFTaSf9V/pub?output=csv');
+                console.log('Fetching artists sheet...');
+                const artistsResponse = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTBw8UmoEPDQ4zAiDWe3GQrkvJxTZOfNcF-GN_ZFghvrWh7EC7HbIa4itTbgOYcGCQM1WlEYFTaSf9V/pub?gid=1909989545&single=true&output=csv');
                 const artistsCsvText = await artistsResponse.text();
+                console.log('Artists CSV loaded, length:', artistsCsvText.length);
                 
                 let artistsData = [];
                 
-                Papa.parse(artistsCsvText, {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        artistsData = results.data.filter(row => row.name && row.photo);
-                        console.log('Loaded artists:', artistsData);
-                    }
+                await new Promise((resolve) => {
+                    Papa.parse(artistsCsvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function(results) {
+                            artistsData = results.data.filter(row => row.name && row.photo);
+                            console.log('Parsed artists:', artistsData.length, 'artists');
+                            console.log('Sample artist:', artistsData[0]);
+                            resolve();
+                        },
+                        error: function(error) {
+                            console.error('Error parsing artists CSV:', error);
+                            resolve();
+                        }
+                    });
                 });
                 
-                // Wait a bit for first parse to complete
-                await new Promise(resolve => setTimeout(resolve, 500));
+                if (artistsData.length === 0) {
+                    throw new Error('No artists data loaded. Check your Artists sheet CSV URL and format.');
+                }
                 
                 // Load tracks (Sheet 2)
-                const tracksResponse = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTBw8UmoEPDQ4zAiDWe3GQrkvJxTZOfNcF-GN_ZFghvrWh7EC7HbIa4itTbgOYcGCQM1WlEYFTaSf9V/pub?output=csv');
+                console.log('Fetching tracks sheet...');
+                const tracksResponse = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTBw8UmoEPDQ4zAiDWe3GQrkvJxTZOfNcF-GN_ZFghvrWh7EC7HbIa4itTbgOYcGCQM1WlEYFTaSf9V/pub?gid=0&single=true&output=csv');
                 const tracksCsvText = await tracksResponse.text();
+                console.log('Tracks CSV loaded, length:', tracksCsvText.length);
                 
-                Papa.parse(tracksCsvText, {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        const tracksRaw = results.data.filter(row => row.track_url && row.singer);
-                        
-                        // Merge tracks with artist details
-                        tracks = tracksRaw.map(track => {
-                            const roles = [];
-                            const artists = {};
+                await new Promise((resolve) => {
+                    Papa.parse(tracksCsvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function(results) {
+                            console.log('Parsed raw tracks:', results.data.length);
+                            console.log('Sample raw track:', results.data[0]);
                             
-                            // For each role, find artist details
-                            if (track.singer) {
-                                const artist = artistsData.find(a => a.name === track.singer);
-                                if (artist) {
-                                    artists.singer = {
-                                        name: artist.name,
-                                        photo: artist.photo,
-                                        bio: artist.bio || ''
-                                    };
-                                    roles.push({role: 'singer', ...artists.singer});
+                            const tracksRaw = results.data.filter(row => row.track_url);
+                            console.log('Filtered tracks with URLs:', tracksRaw.length);
+                            
+                            // Merge tracks with artist details
+                            tracks = tracksRaw.map(track => {
+                                const roles = [];
+                                const artists = {};
+                                
+                                // For each role, find artist details
+                                if (track.singer && track.singer.trim()) {
+                                    const artist = artistsData.find(a => a.name.trim() === track.singer.trim());
+                                    if (artist) {
+                                        artists.singer = {
+                                            name: artist.name,
+                                            photo: artist.photo,
+                                            bio: artist.bio || ''
+                                        };
+                                        roles.push({role: 'singer', ...artists.singer});
+                                    } else {
+                                        console.warn('Singer not found in artists:', track.singer);
+                                    }
                                 }
+                                
+                                if (track.lyricist && track.lyricist.trim()) {
+                                    const artist = artistsData.find(a => a.name.trim() === track.lyricist.trim());
+                                    if (artist) {
+                                        artists.lyricist = {
+                                            name: artist.name,
+                                            photo: artist.photo,
+                                            bio: artist.bio || ''
+                                        };
+                                        roles.push({role: 'lyricist', ...artists.lyricist});
+                                    } else {
+                                        console.warn('Lyricist not found in artists:', track.lyricist);
+                                    }
+                                }
+                                
+                                if (track.composer && track.composer.trim()) {
+                                    const artist = artistsData.find(a => a.name.trim() === track.composer.trim());
+                                    if (artist) {
+                                        artists.composer = {
+                                            name: artist.name,
+                                            photo: artist.photo,
+                                            bio: artist.bio || ''
+                                        };
+                                        roles.push({role: 'composer', ...artists.composer});
+                                    } else {
+                                        console.warn('Composer not found in artists:', track.composer);
+                                    }
+                                }
+                                
+                                if (track.arranger && track.arranger.trim()) {
+                                    const artist = artistsData.find(a => a.name.trim() === track.arranger.trim());
+                                    if (artist) {
+                                        artists.arranger = {
+                                            name: artist.name,
+                                            photo: artist.photo,
+                                            bio: artist.bio || ''
+                                        };
+                                        roles.push({role: 'arranger', ...artists.arranger});
+                                    } else {
+                                        console.warn('Arranger not found in artists:', track.arranger);
+                                    }
+                                }
+                                
+                                return {
+                                    track_url: track.track_url,
+                                    track_name: track.track_name || '',
+                                    roles: roles,
+                                    artists: artists
+                                };
+                            });
+                            
+                            console.log('Final merged tracks:', tracks.length);
+                            console.log('Sample merged track:', tracks[0]);
+                            
+                            if (tracks.length === 0) {
+                                document.getElementById('content').innerHTML = '<p style="color: #e74c3c;">هیچ آهنگی یافت نشد. لطفاً فرمت شیت‌ها را بررسی کنید.</p>';
                             }
                             
-                            if (track.lyricist) {
-                                const artist = artistsData.find(a => a.name === track.lyricist);
-                                if (artist) {
-                                    artists.lyricist = {
-                                        name: artist.name,
-                                        photo: artist.photo,
-                                        bio: artist.bio || ''
-                                    };
-                                    roles.push({role: 'lyricist', ...artists.lyricist});
-                                }
-                            }
-                            
-                            if (track.composer) {
-                                const artist = artistsData.find(a => a.name === track.composer);
-                                if (artist) {
-                                    artists.composer = {
-                                        name: artist.name,
-                                        photo: artist.photo,
-                                        bio: artist.bio || ''
-                                    };
-                                    roles.push({role: 'composer', ...artists.composer});
-                                }
-                            }
-                            
-                            if (track.arranger) {
-                                const artist = artistsData.find(a => a.name === track.arranger);
-                                if (artist) {
-                                    artists.arranger = {
-                                        name: artist.name,
-                                        photo: artist.photo,
-                                        bio: artist.bio || ''
-                                    };
-                                    roles.push({role: 'arranger', ...artists.arranger});
-                                }
-                            }
-                            
-                            return {
-                                track_url: track.track_url,
-                                track_name: track.track_name || '',
-                                roles: roles,
-                                artists: artists
-                            };
-                        });
-                        
-                        console.log('Loaded and merged tracks:', tracks);
-                    }
+                            resolve();
+                        },
+                        error: function(error) {
+                            console.error('Error parsing tracks CSV:', error);
+                            resolve();
+                        }
+                    });
                 });
+                
             } catch (error) {
                 console.error('Error loading data:', error);
-                document.getElementById('content').innerHTML = '<p style="color: #e74c3c;">خطا در بارگذاری اطلاعات. لطفاً آدرس گوگل شیت‌ها را بررسی کنید.</p>';
+                document.getElementById('content').innerHTML = `
+                    <div style="color: #e74c3c; text-align: center; padding: 40px;">
+                        <h3>خطا در بارگذاری اطلاعات</h3>
+                        <p>${error.message}</p>
+                        <p style="margin-top: 20px; color: #A0A0A0;">لطفاً کنسول مرورگر را برای جزئیات بیشتر بررسی کنید (F12)</p>
+                    </div>
+                `;
             }
         }
 
