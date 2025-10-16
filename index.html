@@ -220,6 +220,61 @@
             font-size: 1.5em;
         }
 
+        .game-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(13, 13, 13, 0.98), rgba(26, 26, 26, 0.95));
+            border-top: 3px solid #D4AF37;
+            padding: 20px;
+            display: none;
+            z-index: 998;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(46, 58, 89, 0.4);
+            border-radius: 12px;
+            border: 2px solid #B87333;
+            min-width: 150px;
+        }
+
+        .footer-item .label {
+            color: #A0A0A0;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .footer-item .value {
+            color: #D4AF37;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .footer-item.composers-count .value {
+            color: #F5F5F5;
+        }
+
+        /* Add padding to content when footer is visible */
+        .artists-grid.with-footer {
+            padding-bottom: 180px;
+        }
+
         .current-role {
             text-align: center;
             font-size: 1.2em;
@@ -685,7 +740,7 @@
             color: #D4AF37;
         }
 
-        @media (max-width: 768px) {
+                    @media (max-width: 768px) {
             h1 {
                 font-size: 2em;
             }
@@ -702,6 +757,10 @@
             .artists-grid {
                 grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
                 gap: 15px;
+            }
+
+            .artists-grid.with-footer {
+                padding-bottom: 160px;
             }
 
             .controls {
@@ -771,10 +830,20 @@
             }
 
             .composer-counter {
-                top: 75px;
-                left: 15px;
-                font-size: 1.1em;
-                padding: 10px 20px;
+                display: none !important;
+            }
+
+            .footer-content {
+                gap: 10px;
+            }
+
+            .footer-item {
+                min-width: 100px;
+                padding: 8px 15px;
+            }
+
+            .footer-item .value {
+                font-size: 1.4em;
             }
 
             .rules-content {
@@ -809,9 +878,6 @@
 <body>
     <div class="container">
         <button class="rules-btn" id="rulesBtn" title="راهنما">؟</button>
-        <div class="composer-counter" id="composerCounter">
-            <span class="count" id="composerCount">0</span> هنرمند
-        </div>
 
         <header>
             <h1>🎵 استاد موسیقی 🎭</h1>
@@ -865,6 +931,23 @@
             <div id="content" class="loading">در حال بارگذاری هنرمندان...</div>
 
             <audio id="audioPlayer"></audio>
+        </div>
+
+        <div class="game-footer" id="gameFooter">
+            <div class="footer-content">
+                <div class="footer-item">
+                    <div class="label">امتیاز فعلی</div>
+                    <div class="value" id="footerPoints">۱۰۰</div>
+                </div>
+                <div class="footer-item composers-count">
+                    <div class="label">تعداد باقیمانده</div>
+                    <div class="value" id="footerComposerCount">۰</div>
+                </div>
+                <div class="footer-item">
+                    <div class="label">پیشرفت</div>
+                    <div class="value" id="footerProgress">۰٪</div>
+                </div>
+            </div>
         </div>
 
         <footer>
@@ -969,7 +1052,15 @@
 
         function updateComposerCounter() {
             const visible = document.querySelectorAll('.artist-card:not(.hidden)').length;
-            document.getElementById('composerCount').textContent = toPersianNumber(visible);
+            document.getElementById('footerComposerCount').textContent = toPersianNumber(visible);
+        }
+
+        function updateFooterPoints() {
+            document.getElementById('footerPoints').textContent = toPersianNumber(currentPoints.toFixed(0));
+        }
+
+        function updateFooterProgress(progress) {
+            document.getElementById('footerProgress').textContent = toPersianNumber(Math.round(progress)) + '٪';
         }
 
         function loadScores() {
@@ -1247,6 +1338,17 @@
             document.getElementById('content').appendChild(grid);
         }
 
+        function showGameFooter() {
+            document.getElementById('gameFooter').style.display = 'block';
+            document.getElementById('artistsGrid').classList.add('with-footer');
+        }
+
+        function hideGameFooter() {
+            document.getElementById('gameFooter').style.display = 'none';
+            const grid = document.getElementById('artistsGrid');
+            if (grid) grid.classList.remove('with-footer');
+        }
+
         function startGame() {
             document.getElementById('startBtn').disabled = true;
             document.getElementById('diceBtn').disabled = false;
@@ -1292,7 +1394,7 @@
                     card.style.transform = 'scale(1)';
                 });
 
-                document.getElementById('composerCounter').style.display = 'block';
+                showGameFooter();
                 updateComposerCounter();
 
                 startProgressBar();
@@ -1306,25 +1408,30 @@
             currentPoints = 100;
             gameActive = false;
             finalChoiceMode = false;
+            isPaused = false;
+            pausedTime = 0;
             updateCurrentPoints();
             clearInterval(progressInterval);
             clearInterval(hideInterval);
             visibleArtists = [];
-            document.getElementById('composerCounter').style.display = 'none';
+            hideGameFooter();
             document.getElementById('trackInfo').style.display = 'none';
+            document.getElementById('playPauseBtn').textContent = '▶️';
         }
 
         function startProgressBar() {
             progressInterval = setInterval(() => {
-                if (!gameActive) return;
+                if (!gameActive || isPaused) return;
                 
-                const elapsed = (Date.now() - startTime) / 1000;
+                const elapsed = (Date.now() - startTime - pausedTime) / 1000;
                 const progress = (elapsed / trackDuration) * 100;
                 
                 currentPoints = Math.max(FINAL_POINTS, 100 - (elapsed / trackDuration) * (100 - FINAL_POINTS));
                 
                 document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
                 updateCurrentPoints();
+                updateFooterPoints();
+                updateFooterProgress(progress);
                 
                 if (progress >= 100 && gameActive) {
                     endRoundTimeout();
@@ -1392,7 +1499,7 @@
                 saveScores();
 
                 visibleArtists.forEach(c => c.classList.add('disabled'));
-                document.getElementById('composerCounter').style.display = 'none';
+                hideGameFooter();
 
                 setTimeout(() => {
                     showResultSection();
@@ -1437,7 +1544,7 @@
                         c.classList.add('disabled');
                     });
 
-                    document.getElementById('composerCounter').style.display = 'none';
+                    hideGameFooter();
 
                     setTimeout(() => {
                         showResultSection();
@@ -1523,13 +1630,25 @@
         });
 
         // Play/Pause button functionality
+        let pauseStartTime = 0;
+        
         document.getElementById('playPauseBtn').addEventListener('click', () => {
             if (audioPlayer.paused) {
                 audioPlayer.play();
                 document.getElementById('playPauseBtn').textContent = '⏸️';
+                
+                if (isPaused) {
+                    pausedTime += Date.now() - pauseStartTime;
+                    isPaused = false;
+                }
             } else {
                 audioPlayer.pause();
                 document.getElementById('playPauseBtn').textContent = '▶️';
+                
+                if (!isPaused) {
+                    pauseStartTime = Date.now();
+                    isPaused = true;
+                }
             }
         });
 
