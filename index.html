@@ -144,7 +144,7 @@
             box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
         }
 
-        .dice-btn, .start-btn {
+        .start-dice-btn {
             border: none;
             cursor: pointer;
             font-weight: bold;
@@ -152,17 +152,8 @@
             color: #0D0D0D;
             background: transparent;
             font-family: 'Vazirmatn', sans-serif;
-        }
-
-        .start-btn {
-            padding: 15px 25px;
-            font-size: 1.3em;
-            border-left: 2px solid rgba(13, 13, 13, 0.3);
-        }
-
-        .dice-btn {
-            font-size: 2em;
-            padding: 15px 25px;
+            padding: 15px 30px;
+            font-size: 1.5em;
         }
 
         .game-buttons:hover {
@@ -170,7 +161,11 @@
             box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
         }
 
-        .dice-btn:disabled, .start-btn:disabled {
+        .game-buttons:active {
+            transform: scale(0.98);
+        }
+
+        .start-dice-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
@@ -227,7 +222,7 @@
             right: 0;
             background: linear-gradient(to top, rgba(13, 13, 13, 0.98), rgba(26, 26, 26, 0.95));
             border-top: 3px solid #D4AF37;
-            padding: 20px;
+            padding: 15px 20px;
             display: none;
             z-index: 998;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
@@ -237,9 +232,9 @@
             max-width: 1400px;
             margin: 0 auto;
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
             flex-wrap: wrap;
         }
 
@@ -247,23 +242,41 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px 20px;
+            padding: 8px 15px;
             background: rgba(46, 58, 89, 0.4);
-            border-radius: 12px;
+            border-radius: 10px;
             border: 2px solid #B87333;
-            min-width: 150px;
+            min-width: 110px;
+        }
+
+        .footer-item.score-positive {
+            background: rgba(46, 204, 113, 0.2);
+            border-color: #27ae60;
+        }
+
+        .footer-item.score-negative {
+            background: rgba(231, 76, 60, 0.2);
+            border-color: #c0392b;
         }
 
         .footer-item .label {
             color: #A0A0A0;
-            font-size: 0.9em;
-            margin-bottom: 5px;
+            font-size: 0.85em;
+            margin-bottom: 3px;
         }
 
         .footer-item .value {
             color: #D4AF37;
-            font-size: 1.8em;
+            font-size: 1.5em;
             font-weight: bold;
+        }
+
+        .footer-item.score-positive .value {
+            color: #2ecc71;
+        }
+
+        .footer-item.score-negative .value {
+            color: #e74c3c;
         }
 
         .footer-item.composers-count .value {
@@ -272,7 +285,7 @@
 
         /* Add padding to content when footer is visible */
         .artists-grid.with-footer {
-            padding-bottom: 180px;
+            padding-bottom: 140px;
         }
 
         .current-role {
@@ -767,15 +780,9 @@
                 gap: 15px;
             }
 
-            .score-box {
-                padding: 10px 20px;
-                font-size: 1.2em;
-                min-width: 100px;
-            }
-
-            .current-points {
-                padding: 15px 25px;
-                font-size: 1.4em;
+            .start-dice-btn {
+                font-size: 1.3em;
+                padding: 12px 25px;
             }
 
             .artist-info {
@@ -838,12 +845,16 @@
             }
 
             .footer-item {
-                min-width: 100px;
-                padding: 8px 15px;
+                min-width: 85px;
+                padding: 6px 12px;
+            }
+
+            .footer-item .label {
+                font-size: 0.75em;
             }
 
             .footer-item .value {
-                font-size: 1.4em;
+                font-size: 1.2em;
             }
 
             .rules-content {
@@ -898,24 +909,12 @@
             <div class="current-role" id="currentRoleDisplay"></div>
 
             <div class="controls">
-                <div class="score-box score-negative" id="negativeScore">❌ ۰</div>
-                
                 <div class="game-buttons">
-                    <button class="start-btn" id="startBtn">شروع</button>
-                    <button class="dice-btn" id="diceBtn" title="پخش آهنگ تصادفی" disabled>🎲</button>
+                    <button class="start-dice-btn" id="startDiceBtn">🎲 شروع بازی</button>
                 </div>
-
-                <div class="score-box score-positive" id="positiveScore">✓ ۰</div>
             </div>
 
             <div id="streakIndicator" class="streak-indicator" style="display:none;"></div>
-
-            <div id="currentPointsDisplay" style="display:none;">
-                <div class="current-points" id="currentPoints">🎯 امتیاز فعلی: ۱۰۰ امتیاز</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-            </div>
 
             <div class="track-info" id="trackInfo">
                 <div class="track-details">
@@ -935,13 +934,21 @@
 
         <div class="game-footer" id="gameFooter">
             <div class="footer-content">
-                <div class="footer-item">
-                    <div class="label">امتیاز فعلی</div>
-                    <div class="value" id="footerPoints">۱۰۰</div>
+                <div class="footer-item score-negative">
+                    <div class="label">منفی</div>
+                    <div class="value" id="footerNegative">۰</div>
                 </div>
                 <div class="footer-item composers-count">
-                    <div class="label">تعداد باقیمانده</div>
+                    <div class="label">باقیمانده</div>
                     <div class="value" id="footerComposerCount">۰</div>
+                </div>
+                <div class="footer-item score-positive">
+                    <div class="label">مثبت</div>
+                    <div class="value" id="footerPositive">۰</div>
+                </div>
+                <div class="footer-item">
+                    <div class="label">امتیاز</div>
+                    <div class="value" id="footerPoints">۱۰۰</div>
                 </div>
                 <div class="footer-item">
                     <div class="label">پیشرفت</div>
@@ -1080,8 +1087,8 @@
         }
 
         function updateScoreDisplay() {
-            document.getElementById('positiveScore').textContent = `✓ ${toPersianNumber(positiveScore.toFixed(1))}`;
-            document.getElementById('negativeScore').textContent = `❌ ${toPersianNumber(negativeScore.toFixed(1))}`;
+            document.getElementById('footerPositive').textContent = toPersianNumber(positiveScore.toFixed(1));
+            document.getElementById('footerNegative').textContent = toPersianNumber(negativeScore.toFixed(1));
             
             if (currentStreak > 0 || bestStreak > 0) {
                 document.getElementById('streakIndicator').style.display = 'block';
@@ -1091,7 +1098,7 @@
         }
 
         function updateCurrentPoints() {
-            document.getElementById('currentPoints').textContent = `🎯 امتیاز فعلی: ${toPersianNumber(currentPoints.toFixed(1))} امتیاز`;
+            // This function is no longer needed as we use footer
         }
 
         async function loadTracks() {
@@ -1341,6 +1348,7 @@
         function showGameFooter() {
             document.getElementById('gameFooter').style.display = 'block';
             document.getElementById('artistsGrid').classList.add('with-footer');
+            updateScoreDisplay();
         }
 
         function hideGameFooter() {
@@ -1350,13 +1358,14 @@
         }
 
         function startGame() {
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('diceBtn').disabled = false;
-            document.getElementById('status').textContent = 'روی تاس 🎲 کلیک کنید تا آهنگ تصادفی پخش شود!';
+            // This function is no longer needed - merged with playRandomTrack
         }
 
         function playRandomTrack() {
             if (filteredArtists.length === 0) return;
+
+            // Disable button during play
+            document.getElementById('startDiceBtn').disabled = true;
 
             resetRound();
 
@@ -1381,10 +1390,8 @@
                 audioPlayer.play();
                 gameActive = true;
 
-                document.getElementById('currentPointsDisplay').style.display = 'block';
                 document.getElementById('status').textContent = '🎵 با دقت گوش دهید! برای امتیاز بیشتر سریع انتخاب کنید!';
                 document.getElementById('status').classList.add('playing');
-                document.getElementById('diceBtn').disabled = true;
 
                 visibleArtists = Array.from(document.querySelectorAll('.artist-card'));
                 visibleArtists.forEach(card => {
@@ -1616,15 +1623,14 @@
             
             displayArtists();
             
-            document.getElementById('diceBtn').disabled = false;
-            document.getElementById('currentPointsDisplay').style.display = 'none';
+            document.getElementById('startDiceBtn').disabled = false;
+            document.getElementById('startDiceBtn').textContent = '🎲 دور بعدی';
             currentTrack = null;
-            document.getElementById('status').textContent = 'روی تاس 🎲 کلیک کنید تا آهنگ دیگری پخش شود!';
+            document.getElementById('status').textContent = 'روی دکمه کلیک کنید تا دور بعدی شروع شود!';
             document.getElementById('status').style.color = '#A0A0A0';
         };
 
-        document.getElementById('startBtn').addEventListener('click', startGame);
-        document.getElementById('diceBtn').addEventListener('click', playRandomTrack);
+        document.getElementById('startDiceBtn').addEventListener('click', playRandomTrack);
         document.getElementById('rulesBtn').addEventListener('click', () => {
             document.getElementById('rulesOverlay').style.display = 'flex';
         });
