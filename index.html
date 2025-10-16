@@ -922,19 +922,102 @@
 
         async function loadTracks() {
             try {
-                const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTBw8UmoEPDQ4zAiDWe3GQrkvJxTZOfNcF-GN_ZFghvrWh7EC7HbIa4itTbgOYcGCQM1WlEYFTaSf9V/pub?output=csv');
-                const csvText = await response.text();
+                // Load artists details (Sheet 1)
+                const artistsResponse = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTBw8UmoEPDQ4zAiDWe3GQrkvJxTZOfNcF-GN_ZFghvrWh7EC7HbIa4itTbgOYcGCQM1WlEYFTaSf9V/pub?output=csv');
+                const artistsCsvText = await artistsResponse.text();
                 
-                Papa.parse(csvText, {
+                let artistsData = [];
+                
+                Papa.parse(artistsCsvText, {
                     header: true,
                     skipEmptyLines: true,
                     complete: function(results) {
-                        tracks = results.data.filter(row => row.name && row.photo && row.track && row.role);
-                        console.log('Loaded tracks:', tracks);
+                        artistsData = results.data.filter(row => row.name && row.photo);
+                        console.log('Loaded artists:', artistsData);
+                    }
+                });
+                
+                // Wait a bit for first parse to complete
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Load tracks (Sheet 2)
+                const tracksResponse = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTBw8UmoEPDQ4zAiDWe3GQrkvJxTZOfNcF-GN_ZFghvrWh7EC7HbIa4itTbgOYcGCQM1WlEYFTaSf9V/pub?output=csv');
+                const tracksCsvText = await tracksResponse.text();
+                
+                Papa.parse(tracksCsvText, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        const tracksRaw = results.data.filter(row => row.track_url && row.singer);
+                        
+                        // Merge tracks with artist details
+                        tracks = tracksRaw.map(track => {
+                            const roles = [];
+                            const artists = {};
+                            
+                            // For each role, find artist details
+                            if (track.singer) {
+                                const artist = artistsData.find(a => a.name === track.singer);
+                                if (artist) {
+                                    artists.singer = {
+                                        name: artist.name,
+                                        photo: artist.photo,
+                                        bio: artist.bio || ''
+                                    };
+                                    roles.push({role: 'singer', ...artists.singer});
+                                }
+                            }
+                            
+                            if (track.lyricist) {
+                                const artist = artistsData.find(a => a.name === track.lyricist);
+                                if (artist) {
+                                    artists.lyricist = {
+                                        name: artist.name,
+                                        photo: artist.photo,
+                                        bio: artist.bio || ''
+                                    };
+                                    roles.push({role: 'lyricist', ...artists.lyricist});
+                                }
+                            }
+                            
+                            if (track.composer) {
+                                const artist = artistsData.find(a => a.name === track.composer);
+                                if (artist) {
+                                    artists.composer = {
+                                        name: artist.name,
+                                        photo: artist.photo,
+                                        bio: artist.bio || ''
+                                    };
+                                    roles.push({role: 'composer', ...artists.composer});
+                                }
+                            }
+                            
+                            if (track.arranger) {
+                                const artist = artistsData.find(a => a.name === track.arranger);
+                                if (artist) {
+                                    artists.arranger = {
+                                        name: artist.name,
+                                        photo: artist.photo,
+                                        bio: artist.bio || ''
+                                    };
+                                    roles.push({role: 'arranger', ...artists.arranger});
+                                }
+                            }
+                            
+                            return {
+                                track_url: track.track_url,
+                                track_name: track.track_name || '',
+                                roles: roles,
+                                artists: artists
+                            };
+                        });
+                        
+                        console.log('Loaded and merged tracks:', tracks);
                     }
                 });
             } catch (error) {
-                document.getElementById('content').innerHTML = '<p style="color: #e74c3c;">خطا در بارگذاری اطلاعات. لطفاً آدرس گوگل شیت را بررسی کنید.</p>';
+                console.error('Error loading data:', error);
+                document.getElementById('content').innerHTML = '<p style="color: #e74c3c;">خطا در بارگذاری اطلاعات. لطفاً آدرس گوگل شیت‌ها را بررسی کنید.</p>';
             }
         }
 
@@ -973,21 +1056,27 @@
             const artistMap = new Map();
             
             tracks.forEach(track => {
-                if (track.role === role) {
-                    if (!artistMap.has(track.name)) {
-                        artistMap.set(track.name, {
-                            name: track.name,
-                            photo: track.photo,
-                            tracks: [track.track],
-                            bio: track.bio || ''
+                // Find roles that match the selected role
+                const roleData = track.roles.find(r => r.role === role);
+                
+                if (roleData) {
+                    const artistName = roleData.name;
+                    
+                    if (!artistMap.has(artistName)) {
+                        artistMap.set(artistName, {
+                            name: roleData.name,
+                            photo: roleData.photo,
+                            bio: roleData.bio,
+                            tracks: [track.track_url]
                         });
                     } else {
-                        artistMap.get(track.name).tracks.push(track.track);
+                        artistMap.get(artistName).tracks.push(track.track_url);
                     }
                 }
             });
             
             filteredArtists = Array.from(artistMap.values());
+            console.log(`Artists for role ${role}:`, filteredArtists);
         }
 
         function shuffle(array) {
