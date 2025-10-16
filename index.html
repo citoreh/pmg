@@ -938,16 +938,16 @@
                     <div class="label">منفی</div>
                     <div class="value" id="footerNegative">۰</div>
                 </div>
-                <div class="footer-item composers-count">
-                    <div class="label">باقیمانده</div>
-                    <div class="value" id="footerComposerCount">۰</div>
-                </div>
                 <div class="footer-item score-positive">
                     <div class="label">مثبت</div>
                     <div class="value" id="footerPositive">۰</div>
                 </div>
+                <div class="footer-item composers-count">
+                    <div class="label">باقیمانده</div>
+                    <div class="value" id="footerComposerCount">۰</div>
+                </div>
                 <div class="footer-item">
-                    <div class="label">امتیاز</div>
+                    <div class="label">امتیاز فعلی</div>
                     <div class="value" id="footerPoints">۱۰۰</div>
                 </div>
                 <div class="footer-item">
@@ -1435,8 +1435,7 @@
                 
                 currentPoints = Math.max(FINAL_POINTS, 100 - (elapsed / trackDuration) * (100 - FINAL_POINTS));
                 
-                document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
-                updateCurrentPoints();
+                // Update footer values
                 updateFooterPoints();
                 updateFooterProgress(progress);
                 
