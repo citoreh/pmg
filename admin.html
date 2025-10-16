@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت - شنوتو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 50%, #2E3A59 100%);
+            min-height: 100vh;
+            color: #F5F5F5;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(26, 26, 26, 0.8);
+            border-radius: 20px;
+            border: 2px solid #D4AF37;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #D4AF37, #B87333);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: rgba(46, 58, 89, 0.3);
+            border-radius: 15px;
+            border: 2px solid #D4AF37;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #D4AF37;
+            font-weight: bold;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"],
+        input[type="url"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #B87333;
+            border-radius: 8px;
+            background: rgba(26, 26, 26, 0.8);
+            color: #F5F5F5;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1em;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #D4AF37;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #D4AF37, #B87333);
+            border: none;
+            border-radius: 10px;
+            color: #0D0D0D;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #B87333;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: 2px solid transparent;
+            border-radius: 10px 10px 0 0;
+            color: #A0A0A0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: #D4AF37;
+            color: #D4AF37;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section {
+            background: rgba(26, 26, 26, 0.5);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .section h2 {
+            color: #D4AF37;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #B87333;
+            padding-bottom: 10px;
+        }
+
+        .add-form {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th {
+            background: rgba(212, 175, 55, 0.2);
+            color: #D4AF37;
+            padding: 12px;
+            text-align: right;
+            border: 1px solid #B87333;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border: 1px solid rgba(184, 115, 51, 0.3);
+            background: rgba(26, 26, 26, 0.3);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(46, 58, 89, 0.2);
+        }
+
+        .data-table img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-edit {
+            padding: 5px 15px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            font-size: 0.9em;
+        }
+
+        .btn-delete {
+            padding: 5px 15px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            font-size: 0.9em;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .message.success {
+            background: rgba(46, 204, 113, 0.2);
+            border: 2px solid #2ecc71;
+            color: #2ecc71;
+        }
+
+        .message.error {
+            background: rgba(231, 76, 60, 0.2);
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            background: rgba(46, 58, 89, 0.3);
+            border-radius: 15px;
+            border: 2px solid #B87333;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #D4AF37;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            color: #A0A0A0;
+            font-size: 1.1em;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1A1A1A, #2E3A59);
+            border: 2px solid #D4AF37;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #D4AF37;
+            font-size: 1.5em;
+        }
+
+        .close-modal {
+            background: transparent;
+            color: #e74c3c;
+            font-size: 1.5em;
+            padding: 5px 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #D4AF37;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-table {
+                font-size: 0.9em;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎛️ پنل مدیریت شنوتو</h1>
+            <p>مدیریت هنرمندان و آهنگ‌ها</p>
+        </header>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="section">
+            <div class="login-form">
+                <h2 style="text-align: center; margin-bottom: 30px;">ورود به پنل</h2>
+                <div class="form-group">
+                    <label>ایمیل:</label>
+                    <input type="email" id="loginEmail" placeholder="admin@example.com">
+                </div>
+                <div class="form-group">
+                    <label>رمز عبور:</label>
+                    <input type="password" id="loginPassword" placeholder="********">
+                </div>
+                <button onclick="login()" style="width: 100%;">ورود</button>
+                <div id="loginMessage"></div>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="adminPanel" style="display: none;">
+            <div class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>داشبورد</h2>
+                    <button onclick="logout()" class="btn-delete">خروج</button>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3 id="artistCount">0</h3>
+                        <p>هنرمندان</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="trackCount">0</h3>
+                        <p>آهنگ‌ها</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="activeCount">0</h3>
+                        <p>فعال</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('artists')">🎭 هنرمندان</div>
+                <div class="tab" onclick="switchTab('tracks')">🎵 آهنگ‌ها</div>
+                <div class="tab" onclick="switchTab('settings')">⚙️ تنظیمات</div>
+            </div>
+
+            <!-- Artists Tab -->
+            <div id="artistsTab" class="tab-content active">
+                <div class="section">
+                    <h2>افزودن هنرمند جدید</h2>
+                    <div class="add-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>نام هنرمند:</label>
+                                <input type="text" id="artistName" placeholder="محمدرضا شجریان">
+                            </div>
+                            <div class="form-group">
+                                <label>لینک عکس:</label>
+                                <input type="url" id="artistPhoto" placeholder="https://example.com/photo.jpg">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>بیوگرافی:</label>
+                            <textarea id="artistBio" rows="3" placeholder="بیوگرافی هنرمند..."></textarea>
+                        </div>
+                        <button onclick="addArtist()" class="btn-success">افزودن هنرمند</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>لیست هنرمندان</h2>
+                    <div id="artistsLoading" class="loading">در حال بارگذاری...</div>
+                    <table class="data-table" id="artistsTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>عکس</th>
+                                <th>نام</th>
+                                <th>بیوگرافی</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="artistsList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tracks Tab -->
+            <div id="tracksTab" class="tab-content">
+                <div class="section">
+                    <h2>افزودن آهنگ جدید</h2>
+                    <div class="add-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>نام آهنگ:</label>
+                                <input type="text" id="trackName" placeholder="مرغ سحر">
+                            </div>
+                            <div class="form-group">
+                                <label>لینک آهنگ:</label>
+                                <input type="url" id="trackUrl" placeholder="https://example.com/track.mp3">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>خواننده:</label>
+                                <select id="trackSinger"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>ترانه‌سرا:</label>
+                                <select id="trackLyricist"></select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>آهنگساز:</label>
+                                <select id="trackComposer"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>تنظیم‌کننده:</label>
+                                <select id="trackArranger"></select>
+                            </div>
+                        </div>
+                        <button onclick="addTrack()" class="btn-success">افزودن آهنگ</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>لیست آهنگ‌ها</h2>
+                    <div id="tracksLoading" class="loading">در حال بارگذاری...</div>
+                    <table class="data-table" id="tracksTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>نام آهنگ</th>
+                                <th>خواننده</th>
+                                <th>ترانه‌سرا</th>
+                                <th>آهنگساز</th>
+                                <th>تنظیم‌کننده</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tracksList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settingsTab" class="tab-content">
+                <div class="section">
+                    <h2>تنظیمات Firebase</h2>
+                    <div class="form-group">
+                        <label>وضعیت اتصال:</label>
+                        <p id="connectionStatus" style="color: #2ecc71;">✓ متصل به Firebase</p>
+                    </div>
+                    <div class="form-group">
+                        <label>پشتیبان‌گیری:</label>
+                        <button onclick="exportData()">دانلود داده‌ها (JSON)</button>
+                    </div>
+                    <div class="form-group">
+                        <label>بازگردانی داده‌ها:</label>
+                        <input type="file" id="importFile" accept=".json">
+                        <button onclick="importData()">بارگذاری از فایل</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>ویرایش</h3>
+                    <button class="close-modal" onclick="closeModal()">✕</button>
+                </div>
+                <div id="modalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase configuration - Replace with your config
+     const firebaseConfig = {
+    apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
+    authDomain: "shenoto-e26f5.firebaseapp.com",
+    projectId: "shenoto-e26f5",
+    storageBucket: "shenoto-e26f5.firebasestorage.app",
+    messagingSenderId: "276107336693",
+    appId: "1:276107336693:web:249f30844ff11b1ef99ebc",
+    measurementId: "G-4L3KBNR48S"
+  };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let artists = [];
+        let tracks = [];
+
+        // Check authentication state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                showAdminPanel();
+                loadData();
+            } else {
+                currentUser = null;
+                showLoginForm();
+            }
+        });
+
+        // Login function
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showMessage('loginMessage', 'لطفاً ایمیل و رمز عبور را وارد کنید', 'error');
+                return;
+            }
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showMessage('loginMessage', 'ورود موفقیت‌آمیز', 'success');
+            } catch (error) {
+                showMessage('loginMessage', 'خطا در ورود: ' + error.message, 'error');
+            }
+        }
+
+        // Logout function
+        async function logout() {
+            try {
+                await auth.signOut();
+            } catch (error) {
+                console.error('Error logging out:', error);
+            }
+        }
+
+        // Show/Hide sections
+        function showAdminPanel() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'none';
+        }
+
+        // Load data from Firebase
+        async function loadData() {
+            try {
+                // Load artists
+                const artistsSnapshot = await db.collection('artists').get();
+                artists = artistsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Load tracks
+                const tracksSnapshot = await db.collection('tracks').get();
+                tracks = tracksSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                updateStats();
+                displayArtists();
+                displayTracks();
+                populateSelectBoxes();
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('artistCount').textContent = artists.length;
+            document.getElementById('trackCount').textContent = tracks.length;
+            document.getElementById('activeCount').textContent = artists.length + tracks.length;
+        }
+
+        // Add new artist
+        async function addArtist() {
+            const name = document.getElementById('artistName').value;
+            const photo = document.getElementById('artistPhoto').value;
+            const bio = document.getElementById('artistBio').value;
+
+            if (!name || !photo) {
+                alert('لطفاً نام و عکس هنرمند را وارد کنید');
+                return;
+            }
+
+            try {
+                await db.collection('artists').add({
+                    name: name,
+                    photo: photo,
+                    bio: bio,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Clear form
+                document.getElementById('artistName').value = '';
+                document.getElementById('artistPhoto').value = '';
+                document.getElementById('artistBio').value = '';
+
+                showMessage('artistMessage', 'هنرمند با موفقیت اضافه شد', 'success');
+                loadData();
+
+            } catch (error) {
+                console.error('Error adding artist:', error);
+                alert('خطا در افزودن هنرمند');
+            }
+        }
+
+        // Display artists
+        function displayArtists() {
+            const tbody = document.getElementById('artistsList');
+            tbody.innerHTML = '';
+
+            artists.forEach(artist => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><img src="${artist.photo}" alt="${artist.name}"></td>
+                    <td>${artist.name}</td>
+                    <td>${artist.bio ? artist.bio.substring(0, 50) + '...' : '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="editArtist('${artist.id}')">ویرایش</button>
+                            <button class="btn-delete" onclick="deleteArtist('${artist.id}')">حذف</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('artistsLoading').style.display = 'none';
+            document.getElementById('artistsTable').style.display = 'table';
+        }
+
+        // Delete artist
+        async function deleteArtist(id) {
+            if (!confirm('آیا از حذف این هنرمند مطمئن هستید؟')) return;
+
+            try {
+                await db.collection('artists').doc(id).delete();
+                loadData();
+            } catch (error) {
+                console.error('Error deleting artist:', error);
+                alert('خطا در حذف هنرمند');
+            }
+        }
+
+        // Edit artist
+        function editArtist(id) {
+            const artist = artists.find(a => a.id === id);
+            if (!artist) return;
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="form-group">
+                    <label>نام هنرمند:</label>
+                    <input type="text" id="editArtistName" value="${artist.name}">
+                </div>
+                <div class="form-group">
+                    <label>لینک عکس:</label>
+                    <input type="url" id="editArtistPhoto" value="${artist.photo}">
+                </div>
+                <div class="form-group">
+                    <label>بیوگرافی:</label>
+                    <textarea id="editArtistBio" rows="3">${artist.bio || ''}</textarea>
+                </div>
+                <button onclick="updateArtist('${id}')" class="btn-success">ذخیره تغییرات</button>
+            `;
+
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        // Update artist
+        async function updateArtist(id) {
+            const name = document.getElementById('editArtistName').value;
+            const photo = document.getElementById('editArtistPhoto').value;
+            const bio = document.getElementById('editArtistBio').value;
+
+            try {
+                await db.collection('artists').doc(id).update({
+                    name: name,
+                    photo: photo,
+                    bio: bio,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                closeModal();
+                loadData();
+
+            } catch (error) {
+                console.error('Error updating artist:', error);
+                alert('خطا در بروزرسانی هنرمند');
+            }
+        }
+
+        // Populate select boxes
+        function populateSelectBoxes() {
+            const selects = ['trackSinger', 'trackLyricist', 'trackComposer', 'trackArranger'];
+            
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">انتخاب کنید...</option>';
+                
+                artists.forEach(artist => {
+                    const option = document.createElement('option');
+                    option.value = artist.id;
+                    option.textContent = artist.name;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Add new track
+        async function addTrack() {
+            const name = document.getElementById('trackName').value;
+            const url = document.getElementById('trackUrl').value;
+            const singer = document.getElementById('trackSinger').value;
+            const lyricist = document.getElementById('trackLyricist').value;
+            const composer = document.getElementById('trackComposer').value;
+            const arranger = document.getElementById('trackArranger').value;
+
+            if (!name || !url) {
+                alert('لطفاً نام و لینک آهنگ را وارد کنید');
+                return;
+            }
+
+            try {
+                await db.collection('tracks').add({
+                    track_name: name,
+                    track_url: url,
+                    singer: singer,
+                    lyricist: lyricist,
+                    composer: composer,
+                    arranger: arranger,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Clear form
+                document.getElementById('trackName').value = '';
+                document.getElementById('trackUrl').value = '';
+                document.getElementById('trackSinger').value = '';
+                document.getElementById('trackLyricist').value = '';
+                document.getElementById('trackComposer').value = '';
+                document.getElementById('trackArranger').value = '';
+
+                loadData();
+
+            } catch (error) {
+                console.error('Error adding track:', error);
+                alert('خطا در افزودن آهنگ');
+            }
+        }
+
+        // Display tracks
+        function displayTracks() {
+            const tbody = document.getElementById('tracksList');
+            tbody.innerHTML = '';
+
+            tracks.forEach(track => {
+                const singer = artists.find(a => a.id === track.singer);
+                const lyricist = artists.find(a => a.id === track.lyricist);
+                const composer = artists.find(a => a.id === track.composer);
+                const arranger = artists.find(a => a.id === track.arranger);
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${track.track_name}</td>
+                    <td>${singer ? singer.name : '-'}</td>
+                    <td>${lyricist ? lyricist.name : '-'}</td>
+                    <td>${composer ? composer.name : '-'}</td>
+                    <td>${arranger ? arranger.name : '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="editTrack('${track.id}')">ویرایش</button>
+                            <button class="btn-delete" onclick="deleteTrack('${track.id}')">حذف</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('tracksLoading').style.display = 'none';
+            document.getElementById('tracksTable').style.display = 'table';
+        }
+
+        // Delete track
+        async function deleteTrack(id) {
+            if (!confirm('آیا از حذف این آهنگ مطمئن هستید؟')) return;
+
+            try {
+                await db.collection('tracks').doc(id).delete();
+                loadData();
+            } catch (error) {
+                console.error('Error deleting track:', error);
+                alert('خطا در حذف آهنگ');
+            }
+        }
+
+        // Switch tabs
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        // Export data
+        function exportData() {
+            const data = {
+                artists: artists,
+                tracks: tracks,
+                exportDate: new Date().toISOString()
+            };
+
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'shenoto-backup-' + Date.now() + '.json';
+            a.click();
+        }
+
+        // Import data
+        async function importData() {
+            const file = document.getElementById('importFile').files[0];
+            if (!file) {
+                alert('لطفاً یک فایل انتخاب کنید');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!confirm('آیا از جایگزینی داده‌های فعلی مطمئن هستید؟')) return;
+
+                    // Add artists
+                    for (const artist of data.artists) {
+                        delete artist.id;
+                        await db.collection('artists').add(artist);
+                    }
+
+                    // Add tracks
+                    for (const track of data.tracks) {
+                        delete track.id;
+                        await db.collection('tracks').add(track);
+                    }
+
+                    alert('داده‌ها با موفقیت بارگذاری شدند');
+                    loadData();
+
+                } catch (error) {
+                    console.error('Error importing data:', error);
+                    alert('خطا در بارگذاری فایل');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // Show message
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.className = 'message ' + type;
+                element.textContent = message;
+                setTimeout(() => {
+                    element.textContent = '';
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>
