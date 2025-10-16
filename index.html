@@ -232,24 +232,62 @@
             text-align: center;
             font-size: 1.3em;
             color: #F5F5F5;
-            margin-bottom: 20px;
-            padding: 20px;
-            background: rgba(46, 58, 89, 0.3);
-            border-radius: 12px;
-            border: 2px solid #B87333;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(46, 58, 89, 0.4), rgba(26, 26, 26, 0.6));
+            border-radius: 15px;
+            border: 2px solid #D4AF37;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
             display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .track-info .singer-name {
             color: #D4AF37;
-            font-size: 1.4em;
+            font-size: 1.5em;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         .track-info .track-name {
-            color: #A0A0A0;
-            font-size: 1.1em;
+            color: #F5F5F5;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        .play-pause-btn {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #D4AF37, #B87333);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.8em;
+            color: #0D0D0D;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+            margin-top: 10px;
+        }
+
+        .play-pause-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+        }
+
+        .play-pause-btn:active {
+            transform: scale(0.95);
+        }
+
+        .play-pause-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .current-points {
@@ -776,20 +814,10 @@
                 <button class="role-btn" data-role="composer">🎹 آهنگساز</button>
                 <button class="role-btn" data-role="arranger">🎼 تنظیم‌کننده</button>
             </div>
-            <div style="margin-top: 30px; padding: 20px; background: rgba(212, 175, 55, 0.1); border-radius: 10px; text-align: right;">
-                <p style="color: #A0A0A0; font-size: 0.9em;">
-                    ℹ️ اگر دکمه‌ها کار نمی‌کنند، کنسول مرورگر را باز کنید (F12) و پیام‌های خطا را بررسی کنید.
-                </p>
-            </div>
         </div>
 
         <div id="gameScreen" style="display: none;">
             <div class="current-role" id="currentRoleDisplay"></div>
-
-            <div class="track-info" id="trackInfo">
-                <div class="singer-name" id="singerName"></div>
-                <div class="track-name" id="trackName"></div>
-            </div>
 
             <div class="controls">
                 <div class="score-box score-negative" id="negativeScore">❌ ۰</div>
@@ -809,6 +837,12 @@
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
+            </div>
+
+            <div class="track-info" id="trackInfo">
+                <div class="singer-name" id="singerName"></div>
+                <div class="track-name" id="trackName"></div>
+                <button class="play-pause-btn" id="playPauseBtn">▶️</button>
             </div>
 
             <div class="status" id="status">برای شروع بازی دکمه شروع را بزنید!</div>
@@ -1469,6 +1503,26 @@
         document.getElementById('diceBtn').addEventListener('click', playRandomTrack);
         document.getElementById('rulesBtn').addEventListener('click', () => {
             document.getElementById('rulesOverlay').style.display = 'flex';
+        });
+
+        // Play/Pause button functionality
+        document.getElementById('playPauseBtn').addEventListener('click', () => {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                document.getElementById('playPauseBtn').textContent = '⏸️';
+            } else {
+                audioPlayer.pause();
+                document.getElementById('playPauseBtn').textContent = '▶️';
+            }
+        });
+
+        // Update play/pause button when audio state changes
+        audioPlayer.addEventListener('play', () => {
+            document.getElementById('playPauseBtn').textContent = '⏸️';
+        });
+
+        audioPlayer.addEventListener('pause', () => {
+            document.getElementById('playPauseBtn').textContent = '▶️';
         });
 
         window.closeRules = function() {
