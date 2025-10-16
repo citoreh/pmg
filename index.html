@@ -228,6 +228,30 @@
             font-weight: bold;
         }
 
+        .track-info {
+            text-align: center;
+            font-size: 1.3em;
+            color: #F5F5F5;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(46, 58, 89, 0.3);
+            border-radius: 12px;
+            border: 2px solid #B87333;
+            display: none;
+        }
+
+        .track-info .singer-name {
+            color: #D4AF37;
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .track-info .track-name {
+            color: #A0A0A0;
+            font-size: 1.1em;
+        }
+
         .current-points {
             background: linear-gradient(135deg, #2E3A59, #1A1A1A);
             padding: 20px 40px;
@@ -748,7 +772,6 @@
         <div id="roleSelectionScreen" class="role-selection">
             <h2>نقش مورد نظر خود را انتخاب کنید</h2>
             <div class="role-buttons">
-                <button class="role-btn" data-role="singer">🎤 خواننده</button>
                 <button class="role-btn" data-role="lyricist">✍️ ترانه‌سرا</button>
                 <button class="role-btn" data-role="composer">🎹 آهنگساز</button>
                 <button class="role-btn" data-role="arranger">🎼 تنظیم‌کننده</button>
@@ -762,6 +785,11 @@
 
         <div id="gameScreen" style="display: none;">
             <div class="current-role" id="currentRoleDisplay"></div>
+
+            <div class="track-info" id="trackInfo">
+                <div class="singer-name" id="singerName"></div>
+                <div class="track-name" id="trackName"></div>
+            </div>
 
             <div class="controls">
                 <div class="score-box score-negative" id="negativeScore">❌ ۰</div>
@@ -863,6 +891,7 @@
         let currentRole = null;
         let filteredArtists = [];
         let currentTrack = null;
+        let currentTrackData = null;
         let correctArtist = null;
         let positiveScore = 0;
         let negativeScore = 0;
@@ -1090,7 +1119,6 @@
             document.getElementById('gameScreen').style.display = 'block';
             
             const roleNames = {
-                'singer': 'خواننده',
                 'lyricist': 'ترانه‌سرا',
                 'composer': 'آهنگساز',
                 'arranger': 'تنظیم‌کننده'
@@ -1117,10 +1145,18 @@
                             name: roleData.name,
                             photo: roleData.photo,
                             bio: roleData.bio,
-                            tracks: [track.track_url]
+                            tracks: [{
+                                url: track.track_url,
+                                name: track.track_name,
+                                singer: track.artists.singer ? track.artists.singer.name : ''
+                            }]
                         });
                     } else {
-                        artistMap.get(artistName).tracks.push(track.track_url);
+                        artistMap.get(artistName).tracks.push({
+                            url: track.track_url,
+                            name: track.track_name,
+                            singer: track.artists.singer ? track.artists.singer.name : ''
+                        });
                     }
                 }
             });
@@ -1175,7 +1211,13 @@
             correctArtist = filteredArtists[randomIndex];
             
             const randomTrackIndex = Math.floor(Math.random() * correctArtist.tracks.length);
-            currentTrack = correctArtist.tracks[randomTrackIndex];
+            currentTrackData = correctArtist.tracks[randomTrackIndex];
+            currentTrack = currentTrackData.url;
+
+            // Display singer and track name
+            document.getElementById('trackInfo').style.display = 'block';
+            document.getElementById('singerName').textContent = `🎤 ${currentTrackData.singer || 'نامشخص'}`;
+            document.getElementById('trackName').textContent = `🎵 ${currentTrackData.name || 'بدون عنوان'}`;
 
             audioPlayer.src = currentTrack;
             
@@ -1218,6 +1260,7 @@
             clearInterval(hideInterval);
             visibleArtists = [];
             document.getElementById('composerCounter').style.display = 'none';
+            document.getElementById('trackInfo').style.display = 'none';
         }
 
         function startProgressBar() {
