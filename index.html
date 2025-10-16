@@ -247,17 +247,29 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
+        .track-details {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
         .track-info .singer-name {
             color: #D4AF37;
-            font-size: 1.5em;
+            font-size: 1.4em;
             font-weight: bold;
-            margin-bottom: 8px;
+        }
+
+        .track-info .separator {
+            color: #B87333;
+            font-size: 1.4em;
         }
 
         .track-info .track-name {
             color: #F5F5F5;
-            font-size: 1.2em;
-            margin-bottom: 15px;
+            font-size: 1.3em;
         }
 
         .play-pause-btn {
@@ -840,8 +852,11 @@
             </div>
 
             <div class="track-info" id="trackInfo">
-                <div class="singer-name" id="singerName"></div>
-                <div class="track-name" id="trackName"></div>
+                <div class="track-details">
+                    <span class="singer-name" id="singerName"></span>
+                    <span class="separator">—</span>
+                    <span class="track-name" id="trackName"></span>
+                </div>
                 <button class="play-pause-btn" id="playPauseBtn">▶️</button>
             </div>
 
@@ -939,6 +954,8 @@
         let startTime = 0;
         let trackDuration = 0;
         let finalChoiceMode = false;
+        let pausedTime = 0;
+        let isPaused = false;
         const audioPlayer = document.getElementById('audioPlayer');
 
         const MIN_FINAL_OPTIONS = 4;
@@ -1250,8 +1267,8 @@
 
             // Display singer and track name
             document.getElementById('trackInfo').style.display = 'block';
-            document.getElementById('singerName').textContent = `🎤 ${currentTrackData.singer || 'نامشخص'}`;
-            document.getElementById('trackName').textContent = `🎵 ${currentTrackData.name || 'بدون عنوان'}`;
+            document.getElementById('singerName').textContent = currentTrackData.singer || 'نامشخص';
+            document.getElementById('trackName').textContent = currentTrackData.name || 'بدون عنوان';
 
             audioPlayer.src = currentTrack;
             
