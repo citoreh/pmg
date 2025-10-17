@@ -889,28 +889,27 @@
             try {
                 let downloadUrl = storageUrl;
                 
-                // If it's already a full Firebase URL, use it as-is
-                if (storageUrl.includes('firebasestorage.googleapis.com')) {
-                    downloadUrl = storageUrl;
-                    // Make sure it doesn't have the token parameter that causes CORS issues
-                    if (downloadUrl.includes('?')) {
-                        downloadUrl = downloadUrl.split('?')[0];
-                    }
-                } else if (storageUrl.startsWith('mp3/')) {
-                    // It's a path, get the download URL from Storage
-                    const fileRef = storage.ref(storageUrl);
-                    downloadUrl = await fileRef.getDownloadURL();
-                    // Remove the token part
-                    if (downloadUrl.includes('?')) {
-                        downloadUrl = downloadUrl.split('?')[0];
-                    }
-                }
+                // Extract the file path from the URL (works with both full URLs and paths)
+                let filePath = storageUrl;
                 
-                console.log('Track URL loaded:', downloadUrl);
+                if (storageUrl.includes('firebasestorage.googleapis.com')) {
+                    // Extract path from full Firebase URL
+                    const match = storageUrl.match(/o\/(.*?)(\?|$)/);
+                    if (match) {
+                        filePath = decodeURIComponent(match[1]);
+                    }
+                } 
+                
+                // Always generate a fresh signed URL
+                console.log('Generating fresh URL for path:', filePath);
+                const fileRef = storage.ref(filePath);
+                downloadUrl = await fileRef.getDownloadURL();
+                
+                console.log('Fresh track URL generated:', downloadUrl);
                 startAudioPlayback(downloadUrl);
             } catch (error) {
                 console.error('Error loading track URL:', error);
-                document.getElementById('status').textContent = '❌ خطا در بارگذاری آهنگ.';
+                document.getElementById('status').textContent = '❌ خطا در بارگذاری آهنگ: ' + error.message;
                 document.getElementById('startDiceBtn').disabled = false;
             }
         }
@@ -982,15 +981,16 @@
                 console.error('Audio error details:', {
                     code: audioPlayer.error ? audioPlayer.error.code : 'unknown',
                     networkState: audioPlayer.networkState,
-                    readyState: audioPlayer.readyState
+                    readyState: audioPlayer.readyState,
+                    url: trackUrl
                 });
                 
                 const errorCode = audioPlayer.error ? audioPlayer.error.code : 'unknown';
                 const errorMessage = {
                     1: 'فایل لغو شد',
-                    2: 'خطای شبکه - URL قابل دسترسی نیست',
+                    2: 'خطای شبکه',
                     3: 'بارگذاری لغو شد',
-                    4: 'فرمت پشتیبانی نشده'
+                    4: 'فرمت پشتیبانی نشده - فایل MP3 صحیح نیست یا خراب است'
                 }[errorCode] || 'خطای نامشخص';
                 
                 document.getElementById('status').textContent = `❌ خطا: ${errorMessage}`;
@@ -1010,7 +1010,17 @@
             audioPlayer.addEventListener('canplay', onCanPlay, { once: false });
             audioPlayer.addEventListener('error', onError, { once: false });
             audioPlayer.addEventListener('loadedmetadata', onLoadedMetadata, { once: false });
-            audioPlayer.src = trackUrl;
+            
+            // Create a source element with explicit type
+            while (audioPlayer.firstChild) {
+                audioPlayer.removeChild(audioPlayer.firstChild);
+            }
+            
+            const source = document.createElement('source');
+            source.src = trackUrl;
+            source.type = 'audio/mpeg';
+            audioPlayer.appendChild(source);
+            
             audioPlayer.load();
         }
 
