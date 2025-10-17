@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فحص فایل های صوتی</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #0D0D0D;
+            color: #F5F5F5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #D4AF37;
+            margin-bottom: 20px;
+        }
+        .section {
+            background: rgba(26, 26, 26, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #D4AF37;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #D4AF37;
+            color: #0D0D0D;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #B87333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #B87333;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: rgba(212, 175, 55, 0.2);
+            color: #D4AF37;
+        }
+        tr:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+        .success {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+        .error {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        .player {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(46, 58, 89, 0.3);
+            border-radius: 5px;
+        }
+        audio {
+            width: 100%;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔊 فحص فایل های صوتی Firebase</h1>
+        
+        <div class="section">
+            <h2>1. لیست تمام فایل های صوتی</h2>
+            <button onclick="listAudioFiles()">لیست فایل ها</button>
+            <div id="audioStatus" class="status"></div>
+            <div id="audioList"></div>
+        </div>
+
+        <div class="section">
+            <h2>2. تست پخش فایل</h2>
+            <div id="testStatus" class="status"></div>
+            <div id="playerContainer"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
+            authDomain: "shenoto-e26f5.firebaseapp.com",
+            projectId: "shenoto-e26f5",
+            storageBucket: "shenoto-e26f5.firebasestorage.app",
+            messagingSenderId: "276107336693",
+            appId: "1:276107336693:web:249f30844ff11b1ef99ebc",
+            measurementId: "G-4L3KBNR48S"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const storage = firebase.storage();
+        const storageRef = storage.ref();
+
+        let audioFiles = [];
+
+        async function listAudioFiles() {
+            const status = document.getElementById('audioStatus');
+            const container = document.getElementById('audioList');
+            
+            status.textContent = '🔄 Loading...';
+            status.className = 'status';
+            container.innerHTML = '';
+
+            try {
+                audioFiles = [];
+                await listFilesRecursive(storageRef);
+                
+                status.textContent = `✓ Found ${audioFiles.length} audio files`;
+                status.className = 'status success';
+                
+                let html = '<table><tr><th>Filename</th><th>Full Path</th><th>Size</th><th>Action</th></tr>';
+                for (const file of audioFiles) {
+                    const sizeKB = (file.size / 1024).toFixed(2);
+                    html += `<tr>
+                        <td>${file.name}</td>
+                        <td>${file.fullPath}</td>
+                        <td>${sizeKB} KB</td>
+                        <td><button onclick="testFile('${file.fullPath}')">Test</button></td>
+                    </tr>`;
+                }
+                html += '</table>';
+                container.innerHTML = html;
+            } catch (error) {
+                status.textContent = `❌ Error: ${error.message}`;
+                status.className = 'status error';
+                console.error('Error:', error);
+            }
+        }
+
+        async function listFilesRecursive(ref) {
+            try {
+                const result = await ref.listAll();
+                
+                for (const item of result.items) {
+                    if (item.name.endsWith('.mp3') || item.name.endsWith('.wav') || item.name.endsWith('.m4a')) {
+                        const metadata = await item.getMetadata();
+                        audioFiles.push({
+                            name: item.name,
+                            fullPath: item.fullPath,
+                            size: metadata.size,
+                            contentType: metadata.contentType
+                        });
+                    }
+                }
+                
+                for (const prefix of result.prefixes) {
+                    await listFilesRecursive(prefix);
+                }
+            } catch (error) {
+                console.error('Error listing files:', error);
+            }
+        }
+
+        async function testFile(filePath) {
+            const status = document.getElementById('testStatus');
+            const container = document.getElementById('playerContainer');
+            
+            status.textContent = '🔄 Getting download URL...';
+            status.className = 'status';
+
+            try {
+                const fileRef = storage.ref(filePath);
+                const url = await fileRef.getDownloadURL();
+                
+                console.log('Download URL:', url);
+                
+                status.textContent = `✓ URL: ${url}`;
+                status.className = 'status success';
+                
+                const audio = new Audio();
+                audio.addEventListener('canplay', function() {
+                    status.innerHTML = `<strong>✓ File is playable!</strong><br>Duration: ${audio.duration.toFixed(2)}s`;
+                    status.className = 'status success';
+                });
+                
+                audio.addEventListener('error', function(e) {
+                    console.error('Audio error:', e);
+                    console.error('Error code:', audio.error ? audio.error.code : 'unknown');
+                    status.innerHTML = `<strong>❌ Cannot play file</strong><br>Error code: ${audio.error ? audio.error.code : 'unknown'}<br>File might be corrupted or wrong format`;
+                    status.className = 'status error';
+                });
+                
+                audio.crossOrigin = 'anonymous';
+                audio.src = url;
+                audio.load();
+                
+                const playerHtml = `
+                    <div class="player">
+                        <strong>Testing: ${filePath}</strong>
+                        <audio crossorigin="anonymous" controls>
+                            <source src="${url}" type="audio/mpeg">
+                        </audio>
+                    </div>
+                `;
+                container.innerHTML = playerHtml;
+                
+            } catch (error) {
+                status.textContent = `❌ Error: ${error.message}`;
+                status.className = 'status error';
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
