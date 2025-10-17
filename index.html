@@ -887,29 +887,37 @@
 
         async function loadTrackUrl(storageUrl) {
             try {
-                let downloadUrl = storageUrl;
+                console.log('=== LOAD TRACK URL START ===');
+                console.log('Input URL:', storageUrl);
                 
-                // Extract the file path from the URL (works with both full URLs and paths)
                 let filePath = storageUrl;
                 
+                // Extract path from full Firebase URL if needed
                 if (storageUrl.includes('firebasestorage.googleapis.com')) {
-                    // Extract path from full Firebase URL
                     const match = storageUrl.match(/o\/(.*?)(\?|$)/);
                     if (match) {
                         filePath = decodeURIComponent(match[1]);
+                        console.log('Extracted path from full URL:', filePath);
                     }
-                } 
+                }
                 
-                // Always generate a fresh signed URL
-                console.log('Generating fresh URL for path:', filePath);
+                console.log('File path to use:', filePath);
+                
+                // Generate fresh signed URL
                 const fileRef = storage.ref(filePath);
-                downloadUrl = await fileRef.getDownloadURL();
+                console.log('Storage ref created for:', filePath);
                 
-                console.log('Fresh track URL generated:', downloadUrl);
+                const downloadUrl = await fileRef.getDownloadURL();
+                console.log('Fresh download URL generated:', downloadUrl);
+                console.log('=== LOAD TRACK URL SUCCESS ===');
+                
                 startAudioPlayback(downloadUrl);
             } catch (error) {
-                console.error('Error loading track URL:', error);
-                document.getElementById('status').textContent = '❌ خطا در بارگذاری آهنگ: ' + error.message;
+                console.error('=== LOAD TRACK URL ERROR ===');
+                console.error('Error message:', error.message);
+                console.error('Error code:', error.code);
+                console.error('Full error:', error);
+                document.getElementById('status').textContent = '❌ خطا: ' + error.message;
                 document.getElementById('startDiceBtn').disabled = false;
             }
         }
