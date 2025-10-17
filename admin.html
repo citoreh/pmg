@@ -554,11 +554,7 @@
         };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(firebase.app(), 'shenoto');
-db.settings({ 
-    experimentalForceLongPolling: true,
-    useFetchStreams: false
-});
+const db = firebase.firestore();
 
         let currentUser = null;
         let artists = [];
