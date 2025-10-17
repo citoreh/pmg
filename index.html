@@ -258,11 +258,6 @@
             box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
         }
 
-        .play-pause-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         .status {
             text-align: center;
             font-size: 1.3em;
@@ -564,33 +559,6 @@
             font-family: 'Vazirmatn', sans-serif;
         }
 
-        audio {
-            display: none;
-        }
-
-        footer {
-            margin-top: 60px;
-            padding: 30px 20px;
-            text-align: center;
-            border-top: 2px solid rgba(212, 175, 55, 0.3);
-        }
-
-        .disclaimer {
-            max-width: 900px;
-            margin: 0 auto;
-            color: #A0A0A0;
-            font-size: 0.95em;
-            line-height: 1.8;
-            background: rgba(26, 26, 26, 0.5);
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-        }
-
-        .disclaimer strong {
-            color: #D4AF37;
-        }
-
         @media (max-width: 768px) {
             h1 { font-size: 2em; }
             .role-buttons { grid-template-columns: repeat(2, 1fr); }
@@ -644,62 +612,8 @@
             <div class="status" id="status">برای شروع بازی دکمه شروع را بزنید!</div>
 
             <div id="content" class="loading">در حال بارگذاری هنرمندان...</div>
-// Add this to your index.html before the game starts
-// Find the audioPlayer element and add this code
 
-const audioPlayer = document.getElementById('audioPlayer');
-
-// Set CORS attribute
-audioPlayer.crossOrigin = "anonymous";
-
-// Also modify the playRandomTrack function to handle CORS better:
-function playRandomTrackWithCORSFix() {
-    if (filteredArtists.length === 0) return;
-
-    document.getElementById('startDiceBtn').disabled = true;
-    resetRound();
-
-    const randomIndex = Math.floor(Math.random() * filteredArtists.length);
-    correctArtist = filteredArtists[randomIndex];
-    
-    const randomTrackIndex = Math.floor(Math.random() * correctArtist.tracks.length);
-    currentTrack = correctArtist.tracks[randomTrackIndex];
-
-    document.getElementById('trackInfo').style.display = 'block';
-    document.getElementById('singerName').textContent = currentTrack.singer;
-    document.getElementById('trackName').textContent = currentTrack.name || 'بدون عنوان';
-
-    // Add this line - it tells the browser to allow CORS
-    audioPlayer.crossOrigin = "anonymous";
-    
-    // Use the track URL directly
-    audioPlayer.src = currentTrack.url;
-    
-    audioPlayer.addEventListener('loadedmetadata', function startPlayback() {
-        audioPlayer.removeEventListener('loadedmetadata', startPlayback);
-        trackDuration = audioPlayer.duration;
-        startTime = Date.now();
-        audioPlayer.play();
-        gameActive = true;
-
-        document.getElementById('status').textContent = '🎵 با دقت گوش دهید! برای امتیاز بیشتر سریع انتخاب کنید!';
-        document.getElementById('status').classList.add('playing');
-
-        visibleArtists = Array.from(document.querySelectorAll('.artist-card'));
-        visibleArtists.forEach(card => {
-            card.classList.remove('correct', 'wrong', 'disabled', 'hidden');
-            card.style.display = 'block';
-        });
-
-        showGameFooter();
-        updateComposerCounter();
-        startProgressBar();
-        startHidingArtists();
-    }, { once: true });
-
-    audioPlayer.load();
-}
-            <audio id="audioPlayer" crossorigin="anonymous"></audio>
+            <audio id="audioPlayer"></audio>
         </div>
 
         <div class="game-footer" id="gameFooter">
@@ -735,15 +649,22 @@ function playRandomTrackWithCORSFix() {
             <h2>🎮 راهنمای بازی</h2>
             <h3>🎯 هدف</h3>
             <p>هر چه سریع‌تر هنرمند را حدس بزنید! امتیاز با گذشت زمان کاهش می‌یابد.</p>
+            <h3>📋 چگونه بازی کنیم</h3>
+            <p>1. یک نقش انتخاب کنید (خواننده، ترانه‌سرا، آهنگساز یا تنظیم‌کننده)</p>
+            <p>2. دکمه شروع را بزنید</p>
+            <p>3. به موسیقی گوش دهید</p>
+            <p>4. هنرمند را انتخاب کنید</p>
+            <p>5. هر چه سریع‌تر انتخاب کنید، امتیاز بیشتری کسب می‌کنید!</p>
             <button class="close-rules-btn" onclick="closeRules()">بیایید بازی کنیم! 🎵</button>
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
     <script>
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
             authDomain: "shenoto-e26f5.firebaseapp.com",
@@ -756,8 +677,8 @@ function playRandomTrackWithCORSFix() {
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const storage = firebase.storage();
 
+        // Game variables
         let artists = [];
         let tracks = [];
         let currentRole = null;
@@ -770,8 +691,6 @@ function playRandomTrackWithCORSFix() {
         let gameActive = false;
         let progressInterval = null;
         let hideInterval = null;
-        let currentStreak = 0;
-        let bestStreak = 0;
         let visibleArtists = [];
         let startTime = 0;
         let trackDuration = 0;
@@ -784,16 +703,18 @@ function playRandomTrackWithCORSFix() {
         const FINAL_POINTS = 4;
         const audioPlayer = document.getElementById('audioPlayer');
 
+        // Persian number converter
         const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-        
         function toPersianNumber(num) {
             return num.toString().split('').map(digit => persianDigits[parseInt(digit)] || digit).join('');
         }
 
+        // Load data from Firebase
         async function loadDataFromFirebase() {
             try {
                 console.log('Loading data from Firebase...');
                 
+                // Load artists
                 const artistsSnapshot = await db.collection('artists').get();
                 artists = artistsSnapshot.docs.map(doc => ({
                     id: doc.id,
@@ -801,6 +722,7 @@ function playRandomTrackWithCORSFix() {
                 }));
                 console.log('Loaded artists:', artists.length);
 
+                // Load tracks
                 const tracksSnapshot = await db.collection('tracks').get();
                 tracks = tracksSnapshot.docs.map(doc => ({
                     id: doc.id,
@@ -808,7 +730,10 @@ function playRandomTrackWithCORSFix() {
                 }));
                 console.log('Loaded tracks:', tracks.length);
 
+                // Hide loading overlay
                 document.getElementById('loadingOverlay').style.display = 'none';
+
+                // Setup role selection
                 setupRoleSelection();
 
             } catch (error) {
@@ -824,6 +749,7 @@ function playRandomTrackWithCORSFix() {
             }
         }
 
+        // Setup role selection
         function setupRoleSelection() {
             document.querySelectorAll('.role-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -838,6 +764,7 @@ function playRandomTrackWithCORSFix() {
             });
         }
 
+        // Start game with selected role
         function startGameWithRole(role) {
             document.getElementById('roleSelectionScreen').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'block';
@@ -854,6 +781,7 @@ function playRandomTrackWithCORSFix() {
             displayArtists();
         }
 
+        // Prepare artists for selected role
         function prepareArtistsForRole(role) {
             const artistMap = new Map();
             
@@ -872,6 +800,7 @@ function playRandomTrackWithCORSFix() {
                             });
                         }
                         
+                        // Get singer name
                         const singer = track.singer ? artists.find(a => a.id === track.singer) : null;
                         
                         artistMap.get(artistId).tracks.push({
@@ -887,6 +816,7 @@ function playRandomTrackWithCORSFix() {
             console.log(`Artists for role ${role}:`, filteredArtists.length);
         }
 
+        // Display artists grid
         function displayArtists() {
             const shuffled = shuffle(filteredArtists);
             const grid = document.createElement('div');
@@ -899,7 +829,7 @@ function playRandomTrackWithCORSFix() {
                 card.dataset.name = artist.name;
                 card.dataset.id = artist.id;
                 card.innerHTML = `
-                    <img src="${artist.photo}" alt="${artist.name}">
+                    <img src="${artist.photo}" alt="${artist.name}" onerror="this.src='https://via.placeholder.com/200?text=${encodeURIComponent(artist.name)}'">
                     <div class="artist-name">${artist.name}</div>
                 `;
                 card.addEventListener('click', () => handleGuess(artist, card));
@@ -910,6 +840,7 @@ function playRandomTrackWithCORSFix() {
             document.getElementById('content').appendChild(grid);
         }
 
+        // Shuffle array
         function shuffle(array) {
             const newArray = [...array];
             for (let i = newArray.length - 1; i > 0; i--) {
@@ -919,6 +850,7 @@ function playRandomTrackWithCORSFix() {
             return newArray;
         }
 
+        // Play random track
         function playRandomTrack() {
             if (filteredArtists.length === 0) return;
 
@@ -935,80 +867,15 @@ function playRandomTrackWithCORSFix() {
             document.getElementById('singerName').textContent = currentTrack.singer;
             document.getElementById('trackName').textContent = currentTrack.name || 'بدون عنوان';
 
-            // Get download URL from Firebase Storage
-            loadTrackUrl(currentTrack.url);
-        }
-
-        async function loadTrackUrl(storageUrl) {
-            try {
-                console.log('=== LOAD TRACK URL START ===');
-                console.log('Input URL:', storageUrl);
-                
-                let filePath = storageUrl;
-                
-                // Extract path from full Firebase URL if needed
-                if (storageUrl.includes('firebasestorage.googleapis.com')) {
-                    const match = storageUrl.match(/o\/(.*?)(\?|$)/);
-                    if (match) {
-                        filePath = decodeURIComponent(match[1]);
-                        console.log('Extracted path from full URL:', filePath);
-                    }
-                }
-                
-                console.log('File path to use:', filePath);
-                
-                // Generate fresh signed URL
-                const fileRef = storage.ref(filePath);
-                console.log('Storage ref created for:', filePath);
-                
-                const downloadUrl = await fileRef.getDownloadURL();
-                console.log('Fresh download URL generated:', downloadUrl);
-                console.log('=== LOAD TRACK URL SUCCESS ===');
-                
-                startAudioPlayback(downloadUrl);
-            } catch (error) {
-                console.error('=== LOAD TRACK URL ERROR ===');
-                console.error('Error message:', error.message);
-                console.error('Error code:', error.code);
-                console.error('Full error:', error);
-                document.getElementById('status').textContent = '❌ خطا: ' + error.message;
-                document.getElementById('startDiceBtn').disabled = false;
-            }
-        }
-
-        function startAudioPlayback(trackUrl) {
-            // Clear previous listeners
-            audioPlayer.oncanplay = null;
-            audioPlayer.onerror = null;
-            audioPlayer.onended = null;
+            audioPlayer.src = currentTrack.url;
             
-            // Use anonymous CORS for Firebase Storage
-            audioPlayer.crossOrigin = 'anonymous';
-            
-            console.log('Starting audio playback with URL:', trackUrl);
-            
-            let playbackStarted = false;
-            let timeoutId = null;
-            
-            const onCanPlay = () => {
-                if (playbackStarted) return;
-                playbackStarted = true;
-                
-                if (timeoutId) clearTimeout(timeoutId);
-                audioPlayer.removeEventListener('canplay', onCanPlay);
-                audioPlayer.removeEventListener('error', onError);
-                audioPlayer.removeEventListener('loadedmetadata', onLoadedMetadata);
-                
-                console.log('Audio loaded successfully, duration:', audioPlayer.duration);
-                trackDuration = audioPlayer.duration || 30;
+            audioPlayer.addEventListener('loadedmetadata', function startPlayback() {
+                audioPlayer.removeEventListener('loadedmetadata', startPlayback);
+                trackDuration = audioPlayer.duration;
                 startTime = Date.now();
-                
-                audioPlayer.play().catch(err => {
-                    console.error('Error playing audio:', err);
-                    document.getElementById('status').textContent = '❌ خطا در پخش آهنگ.';
-                });
-                
+                audioPlayer.play();
                 gameActive = true;
+
                 document.getElementById('status').textContent = '🎵 با دقت گوش دهید! برای امتیاز بیشتر سریع انتخاب کنید!';
                 document.getElementById('status').classList.add('playing');
 
@@ -1020,72 +887,12 @@ function playRandomTrackWithCORSFix() {
 
                 showGameFooter();
                 startProgressBar();
-                startHidingArtists();
-            };
+            });
 
-            const onLoadedMetadata = () => {
-                console.log('Metadata loaded:', {
-                    duration: audioPlayer.duration,
-                    readyState: audioPlayer.readyState,
-                    networkState: audioPlayer.networkState
-                });
-            };
-            
-            const onError = (e) => {
-                if (playbackStarted) return;
-                
-                if (timeoutId) clearTimeout(timeoutId);
-                audioPlayer.removeEventListener('canplay', onCanPlay);
-                audioPlayer.removeEventListener('error', onError);
-                audioPlayer.removeEventListener('loadedmetadata', onLoadedMetadata);
-                
-                console.error('Audio loading error:', e);
-                console.error('Audio error details:', {
-                    code: audioPlayer.error ? audioPlayer.error.code : 'unknown',
-                    networkState: audioPlayer.networkState,
-                    readyState: audioPlayer.readyState,
-                    url: trackUrl
-                });
-                
-                const errorCode = audioPlayer.error ? audioPlayer.error.code : 'unknown';
-                const errorMessage = {
-                    1: 'فایل لغو شد',
-                    2: 'خطای شبکه',
-                    3: 'بارگذاری لغو شد',
-                    4: 'فرمت پشتیبانی نشده - فایل MP3 صحیح نیست یا خراب است'
-                }[errorCode] || 'خطای نامشخص';
-                
-                document.getElementById('status').textContent = `❌ خطا: ${errorMessage}`;
-                document.getElementById('startDiceBtn').disabled = false;
-            };
-
-            timeoutId = setTimeout(() => {
-                if (!playbackStarted) {
-                    console.warn('Audio loading timeout');
-                    audioPlayer.removeEventListener('canplay', onCanPlay);
-                    audioPlayer.removeEventListener('error', onError);
-                    document.getElementById('status').textContent = '❌ خطا: timeout در بارگذاری آهنگ';
-                    document.getElementById('startDiceBtn').disabled = false;
-                }
-            }, 10000);
-            
-            audioPlayer.addEventListener('canplay', onCanPlay, { once: false });
-            audioPlayer.addEventListener('error', onError, { once: false });
-            audioPlayer.addEventListener('loadedmetadata', onLoadedMetadata, { once: false });
-            
-            // Create a source element with explicit type
-            while (audioPlayer.firstChild) {
-                audioPlayer.removeChild(audioPlayer.firstChild);
-            }
-            
-            const source = document.createElement('source');
-            source.src = trackUrl;
-            source.type = 'audio/mpeg';
-            audioPlayer.appendChild(source);
-            
             audioPlayer.load();
         }
 
+        // Reset round
         function resetRound() {
             currentPoints = 100;
             gameActive = false;
@@ -1100,6 +907,7 @@ function playRandomTrackWithCORSFix() {
             document.getElementById('playPauseBtn').textContent = '▶️';
         }
 
+        // Handle artist guess
         function handleGuess(artist, card) {
             if (!gameActive || !currentTrack) {
                 document.getElementById('status').textContent = 'لطفاً ابتدا بازی را شروع کنید!';
@@ -1107,6 +915,7 @@ function playRandomTrackWithCORSFix() {
             }
 
             if (artist.id === correctArtist.id) {
+                // Correct guess
                 audioPlayer.pause();
                 gameActive = false;
                 clearInterval(progressInterval);
@@ -1114,11 +923,6 @@ function playRandomTrackWithCORSFix() {
                 
                 card.classList.add('correct');
                 positiveScore += currentPoints;
-                currentStreak++;
-                
-                if (currentStreak > bestStreak) {
-                    bestStreak = currentStreak;
-                }
                 
                 document.getElementById('status').textContent = `✓ درست است! +${toPersianNumber(currentPoints.toFixed(1))} امتیاز!`;
                 document.getElementById('status').style.color = '#2ecc71';
@@ -1131,9 +935,9 @@ function playRandomTrackWithCORSFix() {
                     showResultSection();
                 }, 2000);
             } else {
+                // Wrong guess
                 card.classList.add('wrong');
                 negativeScore += currentPoints;
-                currentStreak = 0;
                 
                 document.getElementById('status').textContent = `❌ اشتباه! -${toPersianNumber(currentPoints.toFixed(1))} امتیاز!`;
                 document.getElementById('status').style.color = '#e74c3c';
@@ -1148,6 +952,7 @@ function playRandomTrackWithCORSFix() {
             }
         }
 
+        // Show result section
         function showResultSection() {
             const bioHTML = correctArtist.bio ? `
                 <div class="artist-bio">${correctArtist.bio}</div>
@@ -1159,7 +964,7 @@ function playRandomTrackWithCORSFix() {
                         <h2>🎵 معرفی هنرمند</h2>
                     </div>
                     <div class="artist-info">
-                        <img src="${correctArtist.photo}" alt="${correctArtist.name}" class="artist-photo">
+                        <img src="${correctArtist.photo}" alt="${correctArtist.name}" class="artist-photo" onerror="this.src='https://via.placeholder.com/200?text=${encodeURIComponent(correctArtist.name)}'">
                         <div class="artist-details">
                             <h3>${correctArtist.name}</h3>
                             <p>هنرمند برجسته موسیقی ایرانی</p>
@@ -1176,6 +981,7 @@ function playRandomTrackWithCORSFix() {
             document.getElementById('content').innerHTML = resultHTML;
         }
 
+        // Progress bar management
         function startProgressBar() {
             progressInterval = setInterval(() => {
                 if (!gameActive || isPaused) return;
@@ -1194,36 +1000,7 @@ function playRandomTrackWithCORSFix() {
             }, 100);
         }
 
-        function startHidingArtists() {
-            const wrongArtists = visibleArtists.filter(card => 
-                card.dataset.id !== correctArtist.id
-            );
-            
-            const totalToHide = Math.max(0, wrongArtists.length - (MIN_FINAL_OPTIONS - 1));
-            
-            if (totalToHide > 0 && trackDuration > 0) {
-                const hideInterval_ms = (trackDuration * 1000) / totalToHide;
-                const shuffledWrong = shuffle(wrongArtists);
-                let hideIndex = 0;
-
-                hideInterval = setInterval(() => {
-                    if (!gameActive || hideIndex >= totalToHide) {
-                        clearInterval(hideInterval);
-                        return;
-                    }
-
-                    const cardToHide = shuffledWrong[hideIndex];
-                    if (cardToHide) {
-                        cardToHide.classList.add('hidden');
-                        setTimeout(() => {
-                            cardToHide.style.display = 'none';
-                        }, 500);
-                    }
-                    hideIndex++;
-                }, hideInterval_ms);
-            }
-        }
-
+        // End round timeout
         function endRoundTimeout() {
             if (!gameActive) return;
             
@@ -1236,9 +1013,11 @@ function playRandomTrackWithCORSFix() {
             document.getElementById('status').textContent = `⏰ زمان تمام شد! انتخاب نهایی: ${toPersianNumber(FINAL_POINTS)} امتیاز`;
         }
 
+        // Footer functions
         function showGameFooter() {
             document.getElementById('gameFooter').style.display = 'block';
-            document.getElementById('artistsGrid').classList.add('with-footer');
+            const grid = document.getElementById('artistsGrid');
+            if (grid) grid.classList.add('with-footer');
             updateScoreDisplay();
         }
 
@@ -1256,19 +1035,18 @@ function playRandomTrackWithCORSFix() {
             document.getElementById('footerProgress').textContent = toPersianNumber(Math.round(progress)) + '٪';
         }
 
+        // Score management
         function loadScores() {
-            const saved = JSON.parse(localStorage.getItem('persianMusicScores') || '{"positive":0,"negative":0,"bestStreak":0}');
+            const saved = JSON.parse(localStorage.getItem('persianMusicScores') || '{"positive":0,"negative":0}');
             positiveScore = saved.positive;
             negativeScore = saved.negative;
-            bestStreak = saved.bestStreak || 0;
             updateScoreDisplay();
         }
 
         function saveScores() {
             localStorage.setItem('persianMusicScores', JSON.stringify({
                 positive: positiveScore,
-                negative: negativeScore,
-                bestStreak: bestStreak
+                negative: negativeScore
             }));
         }
 
@@ -1277,10 +1055,11 @@ function playRandomTrackWithCORSFix() {
             document.getElementById('footerNegative').textContent = toPersianNumber(negativeScore.toFixed(1));
         }
 
+        // Global functions
         window.replayTrack = function() {
             if (currentTrack) {
                 audioPlayer.src = currentTrack.url;
-                audioPlayer.play().catch(err => console.error('Error replaying:', err));
+                audioPlayer.play();
             }
         };
 
@@ -1295,6 +1074,7 @@ function playRandomTrackWithCORSFix() {
             document.getElementById('rulesOverlay').style.display = 'none';
         };
 
+        // Event listeners
         document.getElementById('startDiceBtn').addEventListener('click', playRandomTrack);
         
         document.getElementById('rulesBtn').addEventListener('click', () => {
@@ -1303,7 +1083,7 @@ function playRandomTrackWithCORSFix() {
 
         document.getElementById('playPauseBtn').addEventListener('click', () => {
             if (audioPlayer.paused) {
-                audioPlayer.play().catch(err => console.error('Error playing:', err));
+                audioPlayer.play();
                 document.getElementById('playPauseBtn').textContent = '⏸️';
                 if (isPaused) {
                     pausedTime += Date.now() - pauseStartTime;
@@ -1321,6 +1101,7 @@ function playRandomTrackWithCORSFix() {
 
         audioPlayer.addEventListener('ended', endRoundTimeout);
 
+        // Initialize
         loadScores();
         loadDataFromFirebase();
     </script>
