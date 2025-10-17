@@ -398,15 +398,16 @@
             </div>
 
             <div class="tabs">
-                <div class="tab active" onclick="switchTab('artists')">🎭 هنرمندان</div>
-                <div class="tab" onclick="switchTab('tracks')">🎵 آهنگ‌ها</div>
-                <div class="tab" onclick="switchTab('settings')">⚙️ تنظیمات</div>
+                <div class="tab active" onclick="switchTab(event, 'artists')">🎭 هنرمندان</div>
+                <div class="tab" onclick="switchTab(event, 'tracks')">🎵 آهنگ‌ها</div>
+                <div class="tab" onclick="switchTab(event, 'settings')">⚙️ تنظیمات</div>
             </div>
 
             <!-- Artists Tab -->
             <div id="artistsTab" class="tab-content active">
                 <div class="section">
                     <h2>افزودن هنرمند جدید</h2>
+                    <div id="artistMessage"></div>
                     <div class="add-form">
                         <div class="form-row">
                             <div class="form-group">
@@ -447,6 +448,7 @@
             <div id="tracksTab" class="tab-content">
                 <div class="section">
                     <h2>افزودن آهنگ جدید</h2>
+                    <div id="trackMessage"></div>
                     <div class="add-form">
                         <div class="form-row">
                             <div class="form-group">
@@ -540,18 +542,17 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // Firebase configuration - Replace with your config
-     const firebaseConfig = {
-    apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
-    authDomain: "shenoto-e26f5.firebaseapp.com",
-    projectId: "shenoto-e26f5",
-    storageBucket: "shenoto-e26f5.firebasestorage.app",
-    messagingSenderId: "276107336693",
-    appId: "1:276107336693:web:249f30844ff11b1ef99ebc",
-    measurementId: "G-4L3KBNR48S"
-  };
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
+            authDomain: "shenoto-e26f5.firebaseapp.com",
+            projectId: "shenoto-e26f5",
+            storageBucket: "shenoto-e26f5.firebasestorage.app",
+            messagingSenderId: "276107336693",
+            appId: "1:276107336693:web:249f30844ff11b1ef99ebc",
+            measurementId: "G-4L3KBNR48S"
+        };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -559,8 +560,8 @@
         let currentUser = null;
         let artists = [];
         let tracks = [];
+        let currentEditingArtistId = null;
 
-        // Check authentication state
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
@@ -572,7 +573,6 @@
             }
         });
 
-        // Login function
         async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
@@ -590,7 +590,6 @@
             }
         }
 
-        // Logout function
         async function logout() {
             try {
                 await auth.signOut();
@@ -599,7 +598,6 @@
             }
         }
 
-        // Show/Hide sections
         function showAdminPanel() {
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('adminPanel').style.display = 'block';
@@ -610,17 +608,14 @@
             document.getElementById('adminPanel').style.display = 'none';
         }
 
-        // Load data from Firebase
         async function loadData() {
             try {
-                // Load artists
                 const artistsSnapshot = await db.collection('artists').get();
                 artists = artistsSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
                 
-                // Load tracks
                 const tracksSnapshot = await db.collection('tracks').get();
                 tracks = tracksSnapshot.docs.map(doc => ({
                     id: doc.id,
@@ -634,24 +629,23 @@
 
             } catch (error) {
                 console.error('Error loading data:', error);
+                alert('خطا در بارگذاری داده‌ها: ' + error.message);
             }
         }
 
-        // Update statistics
         function updateStats() {
             document.getElementById('artistCount').textContent = artists.length;
             document.getElementById('trackCount').textContent = tracks.length;
             document.getElementById('activeCount').textContent = artists.length + tracks.length;
         }
 
-        // Add new artist
         async function addArtist() {
             const name = document.getElementById('artistName').value;
             const photo = document.getElementById('artistPhoto').value;
             const bio = document.getElementById('artistBio').value;
 
             if (!name || !photo) {
-                alert('لطفاً نام و عکس هنرمند را وارد کنید');
+                showMessage('artistMessage', 'لطفاً نام و عکس هنرمند را وارد کنید', 'error');
                 return;
             }
 
@@ -663,7 +657,6 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Clear form
                 document.getElementById('artistName').value = '';
                 document.getElementById('artistPhoto').value = '';
                 document.getElementById('artistBio').value = '';
@@ -673,11 +666,10 @@
 
             } catch (error) {
                 console.error('Error adding artist:', error);
-                alert('خطا در افزودن هنرمند');
+                showMessage('artistMessage', 'خطا در افزودن هنرمند: ' + error.message, 'error');
             }
         }
 
-        // Display artists
         function displayArtists() {
             const tbody = document.getElementById('artistsList');
             tbody.innerHTML = '';
@@ -685,12 +677,12 @@
             artists.forEach(artist => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td><img src="${artist.photo}" alt="${artist.name}"></td>
+                    <td><img src="${artist.photo}" alt="${artist.name}" onerror="this.src='https://via.placeholder.com/50'"></td>
                     <td>${artist.name}</td>
                     <td>${artist.bio ? artist.bio.substring(0, 50) + '...' : '-'}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-edit" onclick="editArtist('${artist.id}')">ویرایش</button>
+                            <button class="btn-edit" onclick="openEditArtistModal('${artist.id}')">ویرایش</button>
                             <button class="btn-delete" onclick="deleteArtist('${artist.id}')">حذف</button>
                         </div>
                     </td>
@@ -702,24 +694,24 @@
             document.getElementById('artistsTable').style.display = 'table';
         }
 
-        // Delete artist
         async function deleteArtist(id) {
             if (!confirm('آیا از حذف این هنرمند مطمئن هستید؟')) return;
 
             try {
                 await db.collection('artists').doc(id).delete();
                 loadData();
+                showMessage('artistMessage', 'هنرمند با موفقیت حذف شد', 'success');
             } catch (error) {
                 console.error('Error deleting artist:', error);
-                alert('خطا در حذف هنرمند');
+                showMessage('artistMessage', 'خطا در حذف هنرمند: ' + error.message, 'error');
             }
         }
 
-        // Edit artist
-        function editArtist(id) {
+        function openEditArtistModal(id) {
             const artist = artists.find(a => a.id === id);
             if (!artist) return;
 
+            currentEditingArtistId = id;
             const modalBody = document.getElementById('modalBody');
             modalBody.innerHTML = `
                 <div class="form-group">
@@ -734,20 +726,26 @@
                     <label>بیوگرافی:</label>
                     <textarea id="editArtistBio" rows="3">${artist.bio || ''}</textarea>
                 </div>
-                <button onclick="updateArtist('${id}')" class="btn-success">ذخیره تغییرات</button>
+                <button onclick="saveArtistChanges()" class="btn-success" style="width: 100%;">ذخیره تغییرات</button>
             `;
 
             document.getElementById('editModal').style.display = 'flex';
         }
 
-        // Update artist
-        async function updateArtist(id) {
+        async function saveArtistChanges() {
+            if (!currentEditingArtistId) return;
+
             const name = document.getElementById('editArtistName').value;
             const photo = document.getElementById('editArtistPhoto').value;
             const bio = document.getElementById('editArtistBio').value;
 
+            if (!name || !photo) {
+                alert('لطفاً نام و عکس را وارد کنید');
+                return;
+            }
+
             try {
-                await db.collection('artists').doc(id).update({
+                await db.collection('artists').doc(currentEditingArtistId).update({
                     name: name,
                     photo: photo,
                     bio: bio,
@@ -756,14 +754,14 @@
 
                 closeModal();
                 loadData();
+                showMessage('artistMessage', 'تغییرات با موفقیت ذخیره شدند', 'success');
 
             } catch (error) {
                 console.error('Error updating artist:', error);
-                alert('خطا در بروزرسانی هنرمند');
+                alert('خطا در بروزرسانی هنرمند: ' + error.message);
             }
         }
 
-        // Populate select boxes
         function populateSelectBoxes() {
             const selects = ['trackSinger', 'trackLyricist', 'trackComposer', 'trackArranger'];
             
@@ -780,7 +778,6 @@
             });
         }
 
-        // Add new track
         async function addTrack() {
             const name = document.getElementById('trackName').value;
             const url = document.getElementById('trackUrl').value;
@@ -790,7 +787,7 @@
             const arranger = document.getElementById('trackArranger').value;
 
             if (!name || !url) {
-                alert('لطفاً نام و لینک آهنگ را وارد کنید');
+                showMessage('trackMessage', 'لطفاً نام و لینک آهنگ را وارد کنید', 'error');
                 return;
             }
 
@@ -798,14 +795,13 @@
                 await db.collection('tracks').add({
                     track_name: name,
                     track_url: url,
-                    singer: singer,
-                    lyricist: lyricist,
-                    composer: composer,
-                    arranger: arranger,
+                    singer: singer || null,
+                    lyricist: lyricist || null,
+                    composer: composer || null,
+                    arranger: arranger || null,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Clear form
                 document.getElementById('trackName').value = '';
                 document.getElementById('trackUrl').value = '';
                 document.getElementById('trackSinger').value = '';
@@ -813,15 +809,15 @@
                 document.getElementById('trackComposer').value = '';
                 document.getElementById('trackArranger').value = '';
 
+                showMessage('trackMessage', 'آهنگ با موفقیت اضافه شد', 'success');
                 loadData();
 
             } catch (error) {
                 console.error('Error adding track:', error);
-                alert('خطا در افزودن آهنگ');
+                showMessage('trackMessage', 'خطا در افزودن آهنگ: ' + error.message, 'error');
             }
         }
 
-        // Display tracks
         function displayTracks() {
             const tbody = document.getElementById('tracksList');
             tbody.innerHTML = '';
@@ -841,7 +837,6 @@
                     <td>${arranger ? arranger.name : '-'}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-edit" onclick="editTrack('${track.id}')">ویرایش</button>
                             <button class="btn-delete" onclick="deleteTrack('${track.id}')">حذف</button>
                         </div>
                     </td>
@@ -853,31 +848,29 @@
             document.getElementById('tracksTable').style.display = 'table';
         }
 
-        // Delete track
         async function deleteTrack(id) {
             if (!confirm('آیا از حذف این آهنگ مطمئن هستید؟')) return;
 
             try {
                 await db.collection('tracks').doc(id).delete();
                 loadData();
+                showMessage('trackMessage', 'آهنگ با موفقیت حذف شد', 'success');
             } catch (error) {
                 console.error('Error deleting track:', error);
-                alert('خطا در حذف آهنگ');
+                showMessage('trackMessage', 'خطا در حذف آهنگ: ' + error.message, 'error');
             }
         }
 
-        // Switch tabs
-        function switchTab(tab) {
-            // Update tab buttons
+        function switchTab(event, tab) {
+            event.preventDefault();
+            
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
 
-            // Update tab content
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.getElementById(tab + 'Tab').classList.add('active');
         }
 
-        // Export data
         function exportData() {
             const data = {
                 artists: artists,
@@ -892,9 +885,9 @@
             a.href = url;
             a.download = 'shenoto-backup-' + Date.now() + '.json';
             a.click();
+            URL.revokeObjectURL(url);
         }
 
-        // Import data
         async function importData() {
             const file = document.getElementById('importFile').files[0];
             if (!file) {
@@ -909,13 +902,11 @@
                     
                     if (!confirm('آیا از جایگزینی داده‌های فعلی مطمئن هستید؟')) return;
 
-                    // Add artists
                     for (const artist of data.artists) {
                         delete artist.id;
                         await db.collection('artists').add(artist);
                     }
 
-                    // Add tracks
                     for (const track of data.tracks) {
                         delete track.id;
                         await db.collection('tracks').add(track);
@@ -926,28 +917,34 @@
 
                 } catch (error) {
                     console.error('Error importing data:', error);
-                    alert('خطا در بارگذاری فایل');
+                    alert('خطا در بارگذاری فایل: ' + error.message);
                 }
             };
             reader.readAsText(file);
         }
 
-        // Close modal
         function closeModal() {
             document.getElementById('editModal').style.display = 'none';
+            currentEditingArtistId = null;
         }
 
-        // Show message
         function showMessage(elementId, message, type) {
             const element = document.getElementById(elementId);
             if (element) {
                 element.className = 'message ' + type;
                 element.textContent = message;
                 setTimeout(() => {
-                    element.textContent = '';
-                }, 5000);
+                    element.innerHTML = '';
+                }, 4000);
             }
         }
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
     </script>
 </body>
 </html>
