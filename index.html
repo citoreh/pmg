@@ -645,7 +645,7 @@
 
             <div id="content" class="loading">در حال بارگذاری هنرمندان...</div>
 
-            <audio id="audioPlayer" crossorigin="use-credentials"></audio>
+            <audio id="audioPlayer" crossorigin="anonymous"></audio>
         </div>
 
         <div class="game-footer" id="gameFooter">
@@ -889,18 +889,20 @@
             try {
                 let downloadUrl = storageUrl;
                 
-                // If it's a storage path (e.g., "mp3/filename.mp3"), get signed URL from Firebase
-                if (!storageUrl.includes('firebasestorage.googleapis.com')) {
+                // If it's already a full Firebase URL, use it as-is
+                if (storageUrl.includes('firebasestorage.googleapis.com')) {
+                    downloadUrl = storageUrl;
+                    // Make sure it doesn't have the token parameter that causes CORS issues
+                    if (downloadUrl.includes('?')) {
+                        downloadUrl = downloadUrl.split('?')[0];
+                    }
+                } else if (storageUrl.startsWith('mp3/')) {
+                    // It's a path, get the download URL from Storage
                     const fileRef = storage.ref(storageUrl);
                     downloadUrl = await fileRef.getDownloadURL();
-                } else {
-                    // It's already a full URL with token, but we need to ensure no CORS issues
-                    // Remove the token-based URL and get a fresh one from Firebase
-                    const pathMatch = storageUrl.match(/o\/(.*?)\?/);
-                    if (pathMatch) {
-                        const filePath = decodeURIComponent(pathMatch[1]);
-                        const fileRef = storage.ref(filePath);
-                        downloadUrl = await fileRef.getDownloadURL();
+                    // Remove the token part
+                    if (downloadUrl.includes('?')) {
+                        downloadUrl = downloadUrl.split('?')[0];
                     }
                 }
                 
@@ -908,7 +910,7 @@
                 startAudioPlayback(downloadUrl);
             } catch (error) {
                 console.error('Error loading track URL:', error);
-                document.getElementById('status').textContent = '❌ خطا در بارگذاری آهنگ. لطفاً دوباره تلاش کنید.';
+                document.getElementById('status').textContent = '❌ خطا در بارگذاری آهنگ.';
                 document.getElementById('startDiceBtn').disabled = false;
             }
         }
@@ -919,20 +921,25 @@
             audioPlayer.onerror = null;
             audioPlayer.onended = null;
             
-            // Set crossorigin to use-credentials for Firebase URLs
-            audioPlayer.crossOrigin = 'use-credentials';
+            // Use anonymous CORS for Firebase Storage
+            audioPlayer.crossOrigin = 'anonymous';
+            
+            console.log('Starting audio playback with URL:', trackUrl);
             
             let playbackStarted = false;
+            let timeoutId = null;
             
             const onCanPlay = () => {
                 if (playbackStarted) return;
                 playbackStarted = true;
                 
+                if (timeoutId) clearTimeout(timeoutId);
                 audioPlayer.removeEventListener('canplay', onCanPlay);
                 audioPlayer.removeEventListener('error', onError);
+                audioPlayer.removeEventListener('loadedmetadata', onLoadedMetadata);
                 
-                console.log('Audio loaded successfully');
-                trackDuration = audioPlayer.duration;
+                console.log('Audio loaded successfully, duration:', audioPlayer.duration);
+                trackDuration = audioPlayer.duration || 30;
                 startTime = Date.now();
                 
                 audioPlayer.play().catch(err => {
@@ -954,18 +961,34 @@
                 startProgressBar();
                 startHidingArtists();
             };
+
+            const onLoadedMetadata = () => {
+                console.log('Metadata loaded:', {
+                    duration: audioPlayer.duration,
+                    readyState: audioPlayer.readyState,
+                    networkState: audioPlayer.networkState
+                });
+            };
             
             const onError = (e) => {
                 if (playbackStarted) return;
                 
+                if (timeoutId) clearTimeout(timeoutId);
                 audioPlayer.removeEventListener('canplay', onCanPlay);
                 audioPlayer.removeEventListener('error', onError);
+                audioPlayer.removeEventListener('loadedmetadata', onLoadedMetadata);
                 
                 console.error('Audio loading error:', e);
+                console.error('Audio error details:', {
+                    code: audioPlayer.error ? audioPlayer.error.code : 'unknown',
+                    networkState: audioPlayer.networkState,
+                    readyState: audioPlayer.readyState
+                });
+                
                 const errorCode = audioPlayer.error ? audioPlayer.error.code : 'unknown';
                 const errorMessage = {
                     1: 'فایل لغو شد',
-                    2: 'خطای شبکه',
+                    2: 'خطای شبکه - URL قابل دسترسی نیست',
                     3: 'بارگذاری لغو شد',
                     4: 'فرمت پشتیبانی نشده'
                 }[errorCode] || 'خطای نامشخص';
@@ -973,9 +996,20 @@
                 document.getElementById('status').textContent = `❌ خطا: ${errorMessage}`;
                 document.getElementById('startDiceBtn').disabled = false;
             };
+
+            timeoutId = setTimeout(() => {
+                if (!playbackStarted) {
+                    console.warn('Audio loading timeout');
+                    audioPlayer.removeEventListener('canplay', onCanPlay);
+                    audioPlayer.removeEventListener('error', onError);
+                    document.getElementById('status').textContent = '❌ خطا: timeout در بارگذاری آهنگ';
+                    document.getElementById('startDiceBtn').disabled = false;
+                }
+            }, 10000);
             
             audioPlayer.addEventListener('canplay', onCanPlay, { once: false });
             audioPlayer.addEventListener('error', onError, { once: false });
+            audioPlayer.addEventListener('loadedmetadata', onLoadedMetadata, { once: false });
             audioPlayer.src = trackUrl;
             audioPlayer.load();
         }
