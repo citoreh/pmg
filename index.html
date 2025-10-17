@@ -687,6 +687,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
     <script>
         const firebaseConfig = {
@@ -701,6 +702,7 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const storage = firebase.storage();
 
         let artists = [];
         let tracks = [];
@@ -879,9 +881,37 @@
             document.getElementById('singerName').textContent = currentTrack.singer;
             document.getElementById('trackName').textContent = currentTrack.name || 'بدون عنوان';
 
+            // Get download URL from Firebase Storage
+            loadTrackUrl(currentTrack.url);
+        }
+
+        async function loadTrackUrl(storageUrl) {
+            try {
+                let downloadUrl = storageUrl;
+                
+                // If it's a Firebase Storage URL with token, use it directly
+                // If it's a storage path, convert it
+                if (storageUrl.includes('firebasestorage.googleapis.com')) {
+                    downloadUrl = storageUrl;
+                } else if (storageUrl.startsWith('mp3/') || storageUrl.startsWith('/')) {
+                    // It's a path, get the download URL from Storage
+                    const fileRef = storage.ref(storageUrl);
+                    downloadUrl = await fileRef.getDownloadURL();
+                }
+                
+                console.log('Track URL loaded:', downloadUrl);
+                startAudioPlayback(downloadUrl);
+            } catch (error) {
+                console.error('Error loading track URL:', error);
+                document.getElementById('status').textContent = '❌ خطا در بارگذاری آهنگ: ' + error.message;
+                document.getElementById('startDiceBtn').disabled = false;
+            }
+        }
+
+        function startAudioPlayback(trackUrl) {
             // Set up audio player with CORS header
             audioPlayer.crossOrigin = 'anonymous';
-            audioPlayer.src = currentTrack.url;
+            audioPlayer.src = trackUrl;
             
             // Use a more robust loading approach
             audioPlayer.addEventListener('canplay', startPlayback, { once: true });
@@ -913,7 +943,8 @@
             
             function handleAudioError(e) {
                 console.error('Audio loading error:', e);
-                document.getElementById('status').textContent = '❌ خطا در بارگذاری آهنگ. آدرس URL: ' + currentTrack.url;
+                console.error('Error code:', e.target.error ? e.target.error.code : 'Unknown');
+                document.getElementById('status').textContent = '❌ خطا در بارگذاری آهنگ. لطفاً دوباره تلاش کنید.';
                 document.getElementById('startDiceBtn').disabled = false;
             }
 
