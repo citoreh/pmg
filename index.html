@@ -258,6 +258,11 @@
             box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
         }
 
+        .play-pause-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .status {
             text-align: center;
             font-size: 1.3em;
@@ -559,6 +564,33 @@
             font-family: 'Vazirmatn', sans-serif;
         }
 
+        audio {
+            display: none;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding: 30px 20px;
+            text-align: center;
+            border-top: 2px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .disclaimer {
+            max-width: 900px;
+            margin: 0 auto;
+            color: #A0A0A0;
+            font-size: 0.95em;
+            line-height: 1.8;
+            background: rgba(26, 26, 26, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .disclaimer strong {
+            color: #D4AF37;
+        }
+
         @media (max-width: 768px) {
             h1 { font-size: 2em; }
             .role-buttons { grid-template-columns: repeat(2, 1fr); }
@@ -613,7 +645,7 @@
 
             <div id="content" class="loading">در حال بارگذاری هنرمندان...</div>
 
-            <audio id="audioPlayer"></audio>
+            <audio id="audioPlayer" crossorigin="anonymous"></audio>
         </div>
 
         <div class="game-footer" id="gameFooter">
@@ -653,12 +685,10 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
             authDomain: "shenoto-e26f5.firebaseapp.com",
@@ -669,13 +699,9 @@
             measurementId: "G-4L3KBNR48S"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        
-        // MAKE db GLOBAL so console can access it
-        window.db = firebase.firestore();
+        const db = firebase.firestore();
 
-        // Game variables
         let artists = [];
         let tracks = [];
         let currentRole = null;
@@ -702,41 +728,31 @@
         const FINAL_POINTS = 4;
         const audioPlayer = document.getElementById('audioPlayer');
 
-        // Persian number converter
         const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+        
         function toPersianNumber(num) {
             return num.toString().split('').map(digit => persianDigits[parseInt(digit)] || digit).join('');
         }
 
-        // Load data from Firebase
         async function loadDataFromFirebase() {
             try {
                 console.log('Loading data from Firebase...');
                 
-                // Load artists
-                const artistsSnapshot = await window.db.collection('artists').get();
+                const artistsSnapshot = await db.collection('artists').get();
                 artists = artistsSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
                 console.log('Loaded artists:', artists.length);
 
-                // Load tracks
-                const tracksSnapshot = await window.db.collection('tracks').get();
+                const tracksSnapshot = await db.collection('tracks').get();
                 tracks = tracksSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
                 console.log('Loaded tracks:', tracks.length);
 
-                if (artists.length === 0 || tracks.length === 0) {
-                    throw new Error('No artists or tracks found in database');
-                }
-
-                // Hide loading overlay
                 document.getElementById('loadingOverlay').style.display = 'none';
-
-                // Setup role selection
                 setupRoleSelection();
 
             } catch (error) {
@@ -752,7 +768,6 @@
             }
         }
 
-        // Setup role selection
         function setupRoleSelection() {
             document.querySelectorAll('.role-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -767,7 +782,6 @@
             });
         }
 
-        // Start game with selected role
         function startGameWithRole(role) {
             document.getElementById('roleSelectionScreen').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'block';
@@ -784,7 +798,6 @@
             displayArtists();
         }
 
-        // Prepare artists for selected role
         function prepareArtistsForRole(role) {
             const artistMap = new Map();
             
@@ -803,7 +816,6 @@
                             });
                         }
                         
-                        // Get singer name
                         const singer = track.singer ? artists.find(a => a.id === track.singer) : null;
                         
                         artistMap.get(artistId).tracks.push({
@@ -819,7 +831,6 @@
             console.log(`Artists for role ${role}:`, filteredArtists.length);
         }
 
-        // Display artists grid
         function displayArtists() {
             const shuffled = shuffle(filteredArtists);
             const grid = document.createElement('div');
@@ -843,7 +854,6 @@
             document.getElementById('content').appendChild(grid);
         }
 
-        // Shuffle array
         function shuffle(array) {
             const newArray = [...array];
             for (let i = newArray.length - 1; i > 0; i--) {
@@ -853,7 +863,6 @@
             return newArray;
         }
 
-        // Play random track
         function playRandomTrack() {
             if (filteredArtists.length === 0) return;
 
@@ -870,13 +879,22 @@
             document.getElementById('singerName').textContent = currentTrack.singer;
             document.getElementById('trackName').textContent = currentTrack.name || 'بدون عنوان';
 
+            // Set up audio player with CORS header
+            audioPlayer.crossOrigin = 'anonymous';
             audioPlayer.src = currentTrack.url;
             
-            audioPlayer.addEventListener('loadedmetadata', function startPlayback() {
-                audioPlayer.removeEventListener('loadedmetadata', startPlayback);
+            // Use a more robust loading approach
+            audioPlayer.addEventListener('canplay', startPlayback, { once: true });
+            audioPlayer.addEventListener('error', handleAudioError, { once: true });
+            
+            function startPlayback() {
+                console.log('Audio loaded successfully');
                 trackDuration = audioPlayer.duration;
                 startTime = Date.now();
-                audioPlayer.play();
+                audioPlayer.play().catch(err => {
+                    console.error('Error playing audio:', err);
+                    document.getElementById('status').textContent = '❌ خطا در پخش آهنگ. لطفاً دوباره تلاش کنید.';
+                });
                 gameActive = true;
 
                 document.getElementById('status').textContent = '🎵 با دقت گوش دهید! برای امتیاز بیشتر سریع انتخاب کنید!';
@@ -891,12 +909,17 @@
                 showGameFooter();
                 startProgressBar();
                 startHidingArtists();
-            });
+            }
+            
+            function handleAudioError(e) {
+                console.error('Audio loading error:', e);
+                document.getElementById('status').textContent = '❌ خطا در بارگذاری آهنگ. آدرس URL: ' + currentTrack.url;
+                document.getElementById('startDiceBtn').disabled = false;
+            }
 
             audioPlayer.load();
         }
 
-        // Reset round
         function resetRound() {
             currentPoints = 100;
             gameActive = false;
@@ -911,7 +934,6 @@
             document.getElementById('playPauseBtn').textContent = '▶️';
         }
 
-        // Handle artist guess
         function handleGuess(artist, card) {
             if (!gameActive || !currentTrack) {
                 document.getElementById('status').textContent = 'لطفاً ابتدا بازی را شروع کنید!';
@@ -919,7 +941,6 @@
             }
 
             if (artist.id === correctArtist.id) {
-                // Correct guess
                 audioPlayer.pause();
                 gameActive = false;
                 clearInterval(progressInterval);
@@ -944,7 +965,6 @@
                     showResultSection();
                 }, 2000);
             } else {
-                // Wrong guess
                 card.classList.add('wrong');
                 negativeScore += currentPoints;
                 currentStreak = 0;
@@ -962,7 +982,6 @@
             }
         }
 
-        // Show result section
         function showResultSection() {
             const bioHTML = correctArtist.bio ? `
                 <div class="artist-bio">${correctArtist.bio}</div>
@@ -970,6 +989,9 @@
             
             const resultHTML = `
                 <div class="result-section">
+                    <div class="result-header">
+                        <h2>🎵 معرفی هنرمند</h2>
+                    </div>
                     <div class="artist-info">
                         <img src="${correctArtist.photo}" alt="${correctArtist.name}" class="artist-photo">
                         <div class="artist-details">
@@ -988,7 +1010,6 @@
             document.getElementById('content').innerHTML = resultHTML;
         }
 
-        // Progress bar management
         function startProgressBar() {
             progressInterval = setInterval(() => {
                 if (!gameActive || isPaused) return;
@@ -1007,7 +1028,6 @@
             }, 100);
         }
 
-        // Hide artists gradually
         function startHidingArtists() {
             const wrongArtists = visibleArtists.filter(card => 
                 card.dataset.id !== correctArtist.id
@@ -1038,7 +1058,6 @@
             }
         }
 
-        // End round timeout
         function endRoundTimeout() {
             if (!gameActive) return;
             
@@ -1051,11 +1070,9 @@
             document.getElementById('status').textContent = `⏰ زمان تمام شد! انتخاب نهایی: ${toPersianNumber(FINAL_POINTS)} امتیاز`;
         }
 
-        // Footer functions
         function showGameFooter() {
             document.getElementById('gameFooter').style.display = 'block';
-            const grid = document.getElementById('artistsGrid');
-            if (grid) grid.classList.add('with-footer');
+            document.getElementById('artistsGrid').classList.add('with-footer');
             updateScoreDisplay();
         }
 
@@ -1073,7 +1090,6 @@
             document.getElementById('footerProgress').textContent = toPersianNumber(Math.round(progress)) + '٪';
         }
 
-        // Score management
         function loadScores() {
             const saved = JSON.parse(localStorage.getItem('persianMusicScores') || '{"positive":0,"negative":0,"bestStreak":0}');
             positiveScore = saved.positive;
@@ -1095,11 +1111,10 @@
             document.getElementById('footerNegative').textContent = toPersianNumber(negativeScore.toFixed(1));
         }
 
-        // Global functions
         window.replayTrack = function() {
             if (currentTrack) {
                 audioPlayer.src = currentTrack.url;
-                audioPlayer.play();
+                audioPlayer.play().catch(err => console.error('Error replaying:', err));
             }
         };
 
@@ -1114,7 +1129,6 @@
             document.getElementById('rulesOverlay').style.display = 'none';
         };
 
-        // Event listeners
         document.getElementById('startDiceBtn').addEventListener('click', playRandomTrack);
         
         document.getElementById('rulesBtn').addEventListener('click', () => {
@@ -1123,7 +1137,7 @@
 
         document.getElementById('playPauseBtn').addEventListener('click', () => {
             if (audioPlayer.paused) {
-                audioPlayer.play();
+                audioPlayer.play().catch(err => console.error('Error playing:', err));
                 document.getElementById('playPauseBtn').textContent = '⏸️';
                 if (isPaused) {
                     pausedTime += Date.now() - pauseStartTime;
@@ -1141,7 +1155,6 @@
 
         audioPlayer.addEventListener('ended', endRoundTimeout);
 
-        // Initialize
         loadScores();
         loadDataFromFirebase();
     </script>
