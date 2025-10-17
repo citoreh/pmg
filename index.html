@@ -626,10 +626,6 @@
                     <div class="label">امتیاز مثبت</div>
                     <div class="value" id="footerPositive">۰</div>
                 </div>
-                <div class="footer-item composers-count">
-                    <div class="label">باقیمانده</div>
-                    <div class="value" id="footerComposerCount">۰</div>
-                </div>
                 <div class="footer-item">
                     <div class="label">امتیاز قابل کسب</div>
                     <div class="value" id="footerPoints">۱۰۰</div>
@@ -658,25 +654,26 @@
     </div>
 
     <!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // Firebase configuration - Replace with your config
-    const firebaseConfig = {
-    apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
-    authDomain: "shenoto-e26f5.firebaseapp.com",
-    projectId: "shenoto-e26f5",
-    storageBucket: "shenoto-e26f5.firebasestorage.app",
-    messagingSenderId: "276107336693",
-    appId: "1:276107336693:web:249f30844ff11b1ef99ebc",
-    measurementId: "G-4L3KBNR48S"
-  };
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
+            authDomain: "shenoto-e26f5.firebaseapp.com",
+            projectId: "shenoto-e26f5",
+            storageBucket: "shenoto-e26f5.firebasestorage.app",
+            messagingSenderId: "276107336693",
+            appId: "1:276107336693:web:249f30844ff11b1ef99ebc",
+            measurementId: "G-4L3KBNR48S"
+        };
 
         // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+        firebase.initializeApp(firebaseConfig);
+        
+        // MAKE db GLOBAL so console can access it
+        window.db = firebase.firestore();
 
         // Game variables
         let artists = [];
@@ -717,7 +714,7 @@ const db = firebase.firestore();
                 console.log('Loading data from Firebase...');
                 
                 // Load artists
-                const artistsSnapshot = await db.collection('artists').get();
+                const artistsSnapshot = await window.db.collection('artists').get();
                 artists = artistsSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
@@ -725,12 +722,16 @@ const db = firebase.firestore();
                 console.log('Loaded artists:', artists.length);
 
                 // Load tracks
-                const tracksSnapshot = await db.collection('tracks').get();
+                const tracksSnapshot = await window.db.collection('tracks').get();
                 tracks = tracksSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
                 console.log('Loaded tracks:', tracks.length);
+
+                if (artists.length === 0 || tracks.length === 0) {
+                    throw new Error('No artists or tracks found in database');
+                }
 
                 // Hide loading overlay
                 document.getElementById('loadingOverlay').style.display = 'none';
@@ -888,7 +889,6 @@ const db = firebase.firestore();
                 });
 
                 showGameFooter();
-                updateComposerCounter();
                 startProgressBar();
                 startHidingArtists();
             });
@@ -970,9 +970,6 @@ const db = firebase.firestore();
             
             const resultHTML = `
                 <div class="result-section">
-                    <div class="result-header">
-                        <h2>🎵 معرفی هنرمند</h2>
-                    </div>
                     <div class="artist-info">
                         <img src="${correctArtist.photo}" alt="${correctArtist.name}" class="artist-photo">
                         <div class="artist-details">
@@ -1034,7 +1031,6 @@ const db = firebase.firestore();
                         cardToHide.classList.add('hidden');
                         setTimeout(() => {
                             cardToHide.style.display = 'none';
-                            updateComposerCounter();
                         }, 500);
                     }
                     hideIndex++;
@@ -1058,7 +1054,8 @@ const db = firebase.firestore();
         // Footer functions
         function showGameFooter() {
             document.getElementById('gameFooter').style.display = 'block';
-            document.getElementById('artistsGrid').classList.add('with-footer');
+            const grid = document.getElementById('artistsGrid');
+            if (grid) grid.classList.add('with-footer');
             updateScoreDisplay();
         }
 
@@ -1066,11 +1063,6 @@ const db = firebase.firestore();
             document.getElementById('gameFooter').style.display = 'none';
             const grid = document.getElementById('artistsGrid');
             if (grid) grid.classList.remove('with-footer');
-        }
-
-        function updateComposerCounter() {
-            const visible = document.querySelectorAll('.artist-card:not(.hidden)').length;
-            document.getElementById('footerComposerCount').textContent = toPersianNumber(visible);
         }
 
         function updateFooterPoints() {
@@ -1152,3 +1144,6 @@ const db = firebase.firestore();
         // Initialize
         loadScores();
         loadDataFromFirebase();
+    </script>
+</body>
+</html>
