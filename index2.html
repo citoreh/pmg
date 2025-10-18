@@ -95,6 +95,57 @@
             margin-bottom: 40px;
         }
 
+        .role-preview {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .preview-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(46, 58, 89, 0.3);
+            border: 2px solid #B87333;
+            border-radius: 15px;
+            min-width: 180px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preview-card:hover {
+            border-color: #D4AF37;
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .preview-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 3px solid #D4AF37;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .preview-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(100%) hue-rotate(180deg) saturate(150%) brightness(90%);
+        }
+
+        .preview-label {
+            color: #D4AF37;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+            font-family: 'Vazirmatn', 'Segoe UI', sans-serif;
+        }
+
         .role-buttons {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -113,6 +164,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
         }
 
         .role-btn:hover {
@@ -125,6 +177,42 @@
             background: linear-gradient(135deg, #D4AF37, #B87333);
             color: #0D0D0D;
             border-color: #D4AF37;
+            transform: scale(1.05);
+        }
+
+        #levelSelectionScreen .role-btn {
+            background: linear-gradient(135deg, #1a4d7f, #0d2847);
+            border: 3px solid #2980b9;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #levelSelectionScreen .role-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        #levelSelectionScreen .role-btn:hover::before {
+            left: 100%;
+        }
+
+        #levelSelectionScreen .role-btn:hover {
+            background: linear-gradient(135deg, #2980b9, #1a4d7f);
+            border-color: #3498db;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.5), inset 0 0 20px rgba(52, 152, 219, 0.2);
+        }
+
+        #levelSelectionScreen .role-btn.selected {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: #fff;
+            border-color: #3498db;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.6), 0 0 30px rgba(52, 152, 219, 0.4);
             transform: scale(1.05);
         }
 
@@ -206,11 +294,20 @@
             box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
             display: none;
             animation: slideIn 0.5s ease;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         @keyframes slideIn {
             from { transform: translateY(-20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-20px); opacity: 0; }
         }
 
         .track-details {
@@ -220,6 +317,10 @@
             gap: 15px;
             margin-bottom: 15px;
             flex-wrap: wrap;
+        }
+
+        .track-info.hide-title .track-details {
+            animation: slideOut 0.5s ease forwards;
         }
 
         .track-info .singer-name {
@@ -238,29 +339,22 @@
             font-size: 1.3em;
         }
 
-        .play-pause-btn {
-            display: inline-block;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #D4AF37, #B87333);
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.8em;
-            color: #0D0D0D;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
-            margin-top: 10px;
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(160, 160, 160, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
-        .play-pause-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
-        }
-
-        .play-pause-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #D4AF37, #B87333);
+            width: 0%;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
         }
 
         .status {
@@ -280,14 +374,6 @@
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
-        }
-
-        .difficulty-indicator {
-            text-align: center;
-            font-size: 1.3em;
-            color: #D4AF37;
-            margin-bottom: 15px;
-            font-weight: bold;
         }
 
         .artists-grid {
@@ -325,6 +411,7 @@
             to {
                 opacity: 0;
                 transform: scale(0.8);
+                display: none;
             }
         }
 
@@ -453,6 +540,17 @@
             to { opacity: 1; }
         }
 
+        .result-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .result-header h2 {
+            color: #D4AF37;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
         .artist-info {
             display: flex;
             align-items: center;
@@ -486,6 +584,11 @@
             margin-bottom: 10px;
         }
 
+        .artist-details p {
+            color: #A0A0A0;
+            font-size: 1.3em;
+        }
+
         .artist-bio {
             color: #F5F5F5;
             font-size: 1.1em;
@@ -501,11 +604,14 @@
         .action-buttons {
             text-align: center;
             margin: 40px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
-        .next-round-btn, .replay-btn {
+        .next-round-btn, .replay-btn, .share-btn {
             display: inline-block;
-            margin: 20px 10px;
             padding: 20px 50px;
             border: none;
             border-radius: 15px;
@@ -527,6 +633,29 @@
             border: 2px solid #B87333;
             color: #F5F5F5;
             box-shadow: 0 6px 20px rgba(46, 58, 89, 0.4);
+        }
+
+        .share-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: #F5F5F5;
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .next-round-btn:hover, .replay-btn:hover, .share-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .next-round-btn:hover {
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
+        }
+
+        .replay-btn:hover {
+            box-shadow: 0 8px 25px rgba(46, 58, 89, 0.6);
+            border-color: #D4AF37;
+        }
+
+        .share-btn:hover {
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.6);
         }
 
         .error-message {
@@ -563,6 +692,33 @@
             max-height: 85vh;
             overflow-y: auto;
             box-shadow: 0 10px 50px rgba(212, 175, 55, 0.5);
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .rules-content h2 {
+            color: #D4AF37;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .rules-content h3 {
+            color: #B87333;
+            font-size: 1.5em;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+
+        .rules-content p, .rules-content ul {
+            color: #F5F5F5;
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-bottom: 15px;
         }
 
         .close-rules-btn {
@@ -576,7 +732,13 @@
             font-size: 1.3em;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s ease;
             font-family: 'Vazirmatn', sans-serif;
+        }
+
+        .close-rules-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
         }
 
         audio {
@@ -602,10 +764,17 @@
             border: 1px solid rgba(212, 175, 55, 0.2);
         }
 
+        .disclaimer strong {
+            color: #D4AF37;
+        }
+
         @media (max-width: 768px) {
             h1 { font-size: 2em; }
             .role-buttons { grid-template-columns: repeat(2, 1fr); }
             .artists-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+            .artists-grid.with-footer { padding-bottom: 160px; }
+            .role-preview { gap: 15px; }
+            .preview-card { width: 100px; height: 100px; }
         }
     </style>
 </head>
@@ -627,16 +796,21 @@
 
         <div id="roleSelectionScreen" class="role-selection">
             <h2>گروه مورد نظر خود را انتخاب کنید</h2>
+            <div id="rolePreviewContainer" class="role-preview"></div>
+        </div>
+
+        <div id="levelSelectionScreen" style="display: none;" class="role-selection">
+            <h2>سطح دشواری را انتخاب کنید</h2>
             <div class="role-buttons">
-                <button class="role-btn" data-role="lyricist">✍️ ترانه‌سرا</button>
-                <button class="role-btn" data-role="composer">🎹 آهنگساز</button>
-                <button class="role-btn" data-role="arranger">🎼 تنظیم‌کننده</button>
+                <button class="role-btn" data-level="easy">🟢 مبتدی</button>
+                <button class="role-btn" data-level="medium">🟡 علاقمند</button>
+                <button class="role-btn" data-level="hard">🔴 این کار</button>
+                <button class="role-btn" data-level="extreme">⚫ حرفه‌ای</button>
             </div>
         </div>
 
         <div id="gameScreen" style="display: none;">
             <div class="current-role" id="currentRoleDisplay"></div>
-            <div class="difficulty-indicator" id="difficultyIndicator"></div>
 
             <div class="controls">
                 <div class="game-buttons">
@@ -650,14 +824,16 @@
                     <span class="separator">—</span>
                     <span class="track-name" id="trackName"></span>
                 </div>
-                <button class="play-pause-btn" id="playPauseBtn">▶️</button>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                </div>
             </div>
 
             <div class="status" id="status">برای شروع بازی دکمه شروع را بزنید!</div>
 
             <div id="content" class="loading">در حال بارگذاری هنرمندان...</div>
 
-            <audio id="audioPlayer" preload="auto"></audio>
+            <audio id="audioPlayer" preload="auto" crossorigin="anonymous"></audio>
         </div>
 
         <div class="game-footer" id="gameFooter">
@@ -697,21 +873,18 @@
             <p>مرحله اول: تا ۱۰۰ امتیاز</p>
             <p>مرحله دوم و بعدی: امتیاز دو برابر می‌شود</p>
             <h3>💡 نکات</h3>
-            <ul>
-                <li>هنرمندان ناآشنا به تدریج پنهان می‌شوند</li>
-                <li>انتخاب اشتباه امتیاز منفی می‌دهد</li>
-                <li>سریع‌تر انتخاب کنید، بیشتر امتیاز بگیرید!</li>
-            </ul>
+            <p>• هنرمندان ناآشنا به تدریج پنهان می‌شوند</p>
+            <p>• انتخاب اشتباه امتیاز منفی می‌دهد</p>
+            <p>• سریع‌تر انتخاب کنید، بیشتر امتیاز بگیرید!</p>
+            <p>• سطح دشواری بر تعداد گزینه‌ها تأثیر می‌گذارد</p>
             <button class="close-rules-btn" onclick="closeRules()">بیایید بازی کنیم! 🎵</button>
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
             authDomain: "shenoto-e26f5.firebaseapp.com",
@@ -729,12 +902,14 @@
         let artists = [];
         let tracks = [];
         let currentRole = null;
-        let filteredArtists = [];
+        let gameDifficulty = null;
+        let gameArtists = [];
         let currentTrack = null;
         let correctArtist = null;
         let positiveScore = 0;
         let negativeScore = 0;
         let currentPoints = 100;
+        let basePoints = 100;
         let gameActive = false;
         let progressInterval = null;
         let hideInterval = null;
@@ -748,13 +923,18 @@
         let pausedTime = 0;
         let pauseStartTime = 0;
         let roundCount = 0;
-        let basePoints = 100;
 
-        const MIN_FINAL_OPTIONS = 4;
+        const DIFFICULTY_LEVELS = {
+            easy: { label: 'مبتدی', count: 5 },
+            medium: { label: 'علاقمند', count: 10 },
+            hard: { label: 'این کار', count: 20 },
+            extreme: { label: 'حرفه‌ای', count: 40 }
+        };
+
+        const MIN_FINAL_OPTIONS = 2;
         const FINAL_POINTS = 4;
         const audioPlayer = document.getElementById('audioPlayer');
 
-        // Persian number converter
         const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
         function toPersianNumber(num) {
             return num.toString().split('').map(digit => persianDigits[parseInt(digit)] || digit).join('');
@@ -788,52 +968,43 @@
                     <div class="error-message">
                         <h3>خطا در بارگذاری اطلاعات</h3>
                         <p>${error.message}</p>
+                        <p>لطفاً اتصال اینترنت خود را بررسی کنید و صفحه را رفرش کنید.</p>
                     </div>
                 `;
                 document.getElementById('loadingOverlay').style.display = 'none';
             }
         }
 
+        // Setup role selection with preview images
         function setupRoleSelection() {
-            document.querySelectorAll('.role-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
-                    this.classList.add('selected');
-                    currentRole = this.dataset.role;
-                    
-                    setTimeout(() => {
-                        startGameWithRole(currentRole);
-                    }, 500);
-                });
+            const roles = [
+                { id: 'lyricist', label: '✍️ ترانه‌سرا' },
+                { id: 'composer', label: '🎹 آهنگساز' },
+                { id: 'arranger', label: '🎼 تنظیم‌کننده' }
+            ];
+            const previewContainer = document.getElementById('rolePreviewContainer');
+            previewContainer.innerHTML = '';
+
+            roles.forEach((role) => {
+                const roleArtists = getArtistsForRole(role.id);
+                if (roleArtists.length > 0) {
+                    const randomArtist = roleArtists[Math.floor(Math.random() * roleArtists.length)];
+                    const card = document.createElement('div');
+                    card.className = 'preview-card';
+                    card.innerHTML = `
+                        <div class="preview-image">
+                            <img src="${randomArtist.photo}" alt="${randomArtist.name}" />
+                        </div>
+                        <div class="preview-label">${role.label}</div>
+                    `;
+                    card.addEventListener('click', () => selectRole(role.id));
+                    previewContainer.appendChild(card);
+                }
             });
         }
 
-        function startGameWithRole(role) {
-            document.getElementById('roleSelectionScreen').style.display = 'none';
-            document.getElementById('gameScreen').style.display = 'block';
-            
-            const roleNames = {
-                'lyricist': 'ترانه‌سرا',
-                'composer': 'آهنگساز',
-                'arranger': 'تنظیم‌کننده'
-            };
-            
-            document.getElementById('currentRoleDisplay').textContent = `🎵 نقش انتخابی: ${roleNames[role]}`;
-            roundCount = 0;
-            basePoints = 100;
-            updateDifficultyIndicator();
-            
-            prepareArtistsForRole(role);
-            displayArtists();
-        }
-
-        function updateDifficultyIndicator() {
-            const difficulty = roundCount === 0 ? 'مرحله ۱' : `مرحله ${roundCount + 1}`;
-            const pointsText = `(${toPersianNumber(basePoints)} امتیاز)`;
-            document.getElementById('difficultyIndicator').textContent = `📊 ${difficulty} ${pointsText}`;
-        }
-
-        function prepareArtistsForRole(role) {
+        // Get artists for specific role
+        function getArtistsForRole(role) {
             const artistMap = new Map();
             
             tracks.forEach(track => {
@@ -862,17 +1033,59 @@
                 }
             });
             
-            filteredArtists = Array.from(artistMap.values());
-            console.log(`Artists for role ${role}:`, filteredArtists.length);
+            return Array.from(artistMap.values());
         }
 
+        // Select role and show level selection
+        function selectRole(role) {
+            currentRole = role;
+            document.getElementById('roleSelectionScreen').style.display = 'none';
+            document.getElementById('levelSelectionScreen').style.display = 'block';
+            
+            document.querySelectorAll('#levelSelectionScreen .role-btn').forEach(btn => {
+                btn.onclick = function() {
+                    selectLevel(this.dataset.level);
+                };
+            });
+        }
+
+        // Select level and start game
+        function selectLevel(level) {
+            gameDifficulty = level;
+            const maxArtists = DIFFICULTY_LEVELS[level].count;
+            
+            document.getElementById('levelSelectionScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            
+            const roleNames = {
+                'lyricist': 'ترانه‌سرا',
+                'composer': 'آهنگساز',
+                'arranger': 'تنظیم‌کننده'
+            };
+            
+            roundCount = 0;
+            basePoints = 100;
+            updateDifficultyIndicator(roleNames[currentRole]);
+            
+            const allArtists = getArtistsForRole(currentRole);
+            gameArtists = shuffle(allArtists).slice(0, maxArtists);
+            console.log(`Game artists for level ${level}:`, gameArtists.length);
+            
+            displayArtists();
+        }
+
+        function updateDifficultyIndicator(roleName) {
+            const levelLabel = DIFFICULTY_LEVELS[gameDifficulty].label;
+            document.getElementById('currentRoleDisplay').textContent = `🎵 نقش: ${roleName} | سطح: ${levelLabel} | دور: ${roundCount + 1}`;
+        }
+
+        // Display artists grid
         function displayArtists() {
-            const shuffled = shuffle(filteredArtists);
             const grid = document.createElement('div');
             grid.className = 'artists-grid';
             grid.id = 'artistsGrid';
 
-            shuffled.forEach(artist => {
+            gameArtists.forEach(artist => {
                 const card = document.createElement('div');
                 card.className = 'artist-card';
                 card.dataset.name = artist.name;
@@ -889,6 +1102,7 @@
             document.getElementById('content').appendChild(grid);
         }
 
+        // Shuffle array
         function shuffle(array) {
             const newArray = [...array];
             for (let i = newArray.length - 1; i > 0; i--) {
@@ -898,26 +1112,27 @@
             return newArray;
         }
 
+        // Play random track
         function playRandomTrack() {
-            if (filteredArtists.length === 0) return;
+            if (gameArtists.length === 0) return;
 
             document.getElementById('startDiceBtn').disabled = true;
             resetRound();
 
-            const randomIndex = Math.floor(Math.random() * filteredArtists.length);
-            correctArtist = filteredArtists[randomIndex];
+            const randomIndex = Math.floor(Math.random() * gameArtists.length);
+            correctArtist = gameArtists[randomIndex];
             
             const randomTrackIndex = Math.floor(Math.random() * correctArtist.tracks.length);
             currentTrack = correctArtist.tracks[randomTrackIndex];
 
-            document.getElementById('trackInfo').style.display = 'block';
+            document.getElementById('trackInfo').style.display = 'flex';
+            document.getElementById('trackInfo').classList.remove('hide-title');
             document.getElementById('singerName').textContent = currentTrack.singer;
             document.getElementById('trackName').textContent = currentTrack.name || 'بدون عنوان';
-
-            audioPlayer.src = currentTrack.url;
-            audioPlayer.crossOrigin = "anonymous";
             
-            // FIX: Use canplaythrough event for better reliability
+            audioPlayer.src = currentTrack.url;
+            
+            // FIX: Use canplaythrough for better reliability
             audioPlayer.oncanplaythrough = function() {
                 console.log('Audio ready to play:', currentTrack.url);
                 trackDuration = audioPlayer.duration;
@@ -953,6 +1168,7 @@
             audioPlayer.load();
         }
 
+        // Reset round
         function resetRound() {
             currentPoints = basePoints;
             gameActive = false;
@@ -964,9 +1180,10 @@
             visibleArtists = [];
             hideGameFooter();
             document.getElementById('trackInfo').style.display = 'none';
-            document.getElementById('playPauseBtn').textContent = '▶️';
+            document.getElementById('progressBarFill').style.width = '0%';
         }
 
+        // Handle artist guess
         function handleGuess(artist, card) {
             if (!gameActive || !currentTrack) {
                 document.getElementById('status').textContent = 'لطفاً ابتدا بازی را شروع کنید!';
@@ -994,8 +1211,10 @@
                 saveScores();
                 hideGameFooter();
 
+                document.getElementById('trackInfo').classList.add('hide-title');
+
                 setTimeout(() => {
-                    showResultSection();
+                    showResultSection(artist);
                 }, 2000);
             } else {
                 card.classList.add('wrong');
@@ -1010,12 +1229,14 @@
 
                 setTimeout(() => {
                     card.classList.remove('wrong');
-                    card.classList.add('disabled');
+                    card.classList.add('disabled', 'hidden');
+                    card.style.display = 'none';
                 }, 1500);
             }
         }
 
-        function showResultSection() {
+        // Show result section with share button
+        function showResultSection(artist) {
             const bioHTML = correctArtist.bio ? `
                 <div class="artist-bio">${correctArtist.bio}</div>
             ` : '';
@@ -1034,7 +1255,7 @@
                         </div>
                     </div>
                     <div class="action-buttons">
-                        <button class="replay-btn" onclick="replayTrack()">🔊 پخش مجدد</button>
+                        <button class="share-btn" onclick="shareScore()">📤 اشتراک گذاری</button>
                         <button class="next-round-btn" onclick="startNextRound()">🎲 دور بعدی</button>
                     </div>
                 </div>
@@ -1043,6 +1264,31 @@
             document.getElementById('content').innerHTML = resultHTML;
         }
 
+        // Share score
+        window.shareScore = function() {
+            const roleNames = {
+                'lyricist': 'ترانه‌سرا',
+                'composer': 'آهنگساز',
+                'arranger': 'تنظیم‌کننده'
+            };
+            
+            const text = `🎵 من در شنوتو ${toPersianNumber(currentPoints.toFixed(0))} امتیاز کسب کردم!\n🎭 نقش: ${roleNames[currentRole]}\n✨ آیا تو هم می‌توانی؟`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'شنوتو - بازی موسیقی ایرانی',
+                    text: text
+                }).catch(err => console.log('Share cancelled:', err));
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('متن به کلیپ‌بورد کپی شد!');
+                }).catch(() => {
+                    alert('اشتراک‌گذاری برای این مرورگر دردسترس نیست.');
+                });
+            }
+        };
+
+        // Progress bar management
         function startProgressBar() {
             progressInterval = setInterval(() => {
                 if (!gameActive || isPaused) return;
@@ -1052,6 +1298,7 @@
                 
                 currentPoints = Math.max(FINAL_POINTS, basePoints - (elapsed / trackDuration) * (basePoints - FINAL_POINTS));
                 
+                document.getElementById('progressBarFill').style.width = Math.min(progress, 100) + '%';
                 updateFooterPoints();
                 updateFooterProgress(progress);
                 
@@ -1061,12 +1308,13 @@
             }, 100);
         }
 
+        // Hide artists gradually during playback
         function startHidingArtists() {
             const wrongArtists = visibleArtists.filter(card => 
                 card.dataset.id !== correctArtist.id
             );
             
-            const totalToHide = Math.max(0, wrongArtists.length - (MIN_FINAL_OPTIONS - 1));
+            const totalToHide = Math.max(0, wrongArtists.length - MIN_FINAL_OPTIONS);
             
             if (totalToHide > 0 && trackDuration > 0) {
                 const hideInterval_ms = (trackDuration * 1000) / totalToHide;
@@ -1080,7 +1328,7 @@
                     }
 
                     const cardToHide = shuffledWrong[hideIndex];
-                    if (cardToHide) {
+                    if (cardToHide && !cardToHide.classList.contains('disabled')) {
                         cardToHide.classList.add('hidden');
                         setTimeout(() => {
                             cardToHide.style.display = 'none';
@@ -1091,6 +1339,7 @@
             }
         }
 
+        // End round timeout
         function endRoundTimeout() {
             if (!gameActive) return;
             
@@ -1103,6 +1352,7 @@
             document.getElementById('status').textContent = `⏰ زمان تمام شد! انتخاب نهایی: ${toPersianNumber(FINAL_POINTS)} امتیاز`;
         }
 
+        // Footer functions
         function showGameFooter() {
             document.getElementById('gameFooter').style.display = 'block';
             document.getElementById('artistsGrid').classList.add('with-footer');
@@ -1123,6 +1373,7 @@
             document.getElementById('footerProgress').textContent = toPersianNumber(Math.round(progress)) + '٪';
         }
 
+        // Score management
         function loadScores() {
             const saved = JSON.parse(localStorage.getItem('persianMusicScores') || '{"positive":0,"negative":0,"bestStreak":0}');
             positiveScore = saved.positive;
@@ -1144,17 +1395,17 @@
             document.getElementById('footerNegative').textContent = toPersianNumber(negativeScore.toFixed(1));
         }
 
-        window.replayTrack = function() {
-            if (currentTrack) {
-                audioPlayer.src = currentTrack.url;
-                audioPlayer.play();
-            }
-        };
-
+        // Global functions
         window.startNextRound = function() {
             roundCount++;
             basePoints = 100 * Math.pow(2, roundCount - 1);
-            updateDifficultyIndicator();
+            
+            const roleNames = {
+                'lyricist': 'ترانه‌سرا',
+                'composer': 'آهنگساز',
+                'arranger': 'تنظیم‌کننده'
+            };
+            updateDifficultyIndicator(roleNames[currentRole]);
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
             displayArtists();
@@ -1162,38 +1413,23 @@
             document.getElementById('status').textContent = 'روی دکمه کلیک کنید تا دور بعدی شروع شود!';
             document.getElementById('status').classList.remove('playing');
             document.getElementById('status').style.color = '#A0A0A0';
+            document.getElementById('trackInfo').style.display = 'none';
         };
 
         window.closeRules = function() {
             document.getElementById('rulesOverlay').style.display = 'none';
         };
 
+        // Event listeners
         document.getElementById('startDiceBtn').addEventListener('click', playRandomTrack);
         
         document.getElementById('rulesBtn').addEventListener('click', () => {
             document.getElementById('rulesOverlay').style.display = 'flex';
         });
 
-        document.getElementById('playPauseBtn').addEventListener('click', () => {
-            if (audioPlayer.paused) {
-                audioPlayer.play();
-                document.getElementById('playPauseBtn').textContent = '⏸️';
-                if (isPaused) {
-                    pausedTime += Date.now() - pauseStartTime;
-                    isPaused = false;
-                }
-            } else {
-                audioPlayer.pause();
-                document.getElementById('playPauseBtn').textContent = '▶️';
-                if (!isPaused) {
-                    pauseStartTime = Date.now();
-                    isPaused = true;
-                }
-            }
-        });
-
         audioPlayer.addEventListener('ended', endRoundTimeout);
 
+        // Initialize
         loadScores();
         loadDataFromFirebase();
     </script>
