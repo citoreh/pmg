@@ -106,11 +106,6 @@
             box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
         }
 
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         .tabs {
             display: flex;
             gap: 10px;
@@ -137,16 +132,10 @@
 
         .tab-content {
             display: none;
-            animation: fadeIn 0.3s ease;
         }
 
         .tab-content.active {
             display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
 
         .section {
@@ -234,12 +223,6 @@
             border-radius: 10px;
             margin-bottom: 20px;
             text-align: center;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
         }
 
         .message.success {
@@ -338,15 +321,6 @@
             .stats {
                 grid-template-columns: 1fr;
             }
-            
-            .data-table {
-                font-size: 0.9em;
-            }
-            
-            .data-table th,
-            .data-table td {
-                padding: 8px;
-            }
         }
     </style>
 </head>
@@ -357,7 +331,6 @@
             <p>مدیریت هنرمندان و آهنگ‌ها</p>
         </header>
 
-        <!-- Login Section -->
         <div id="loginSection" class="section">
             <div class="login-form">
                 <h2 style="text-align: center; margin-bottom: 30px;">ورود به پنل</h2>
@@ -374,7 +347,6 @@
             </div>
         </div>
 
-        <!-- Admin Panel -->
         <div id="adminPanel" style="display: none;">
             <div class="section">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -404,7 +376,6 @@
                 <div class="tab" onclick="switchTab('settings')">⚙️ تنظیمات</div>
             </div>
 
-            <!-- Artists Tab -->
             <div id="artistsTab" class="tab-content active">
                 <div class="section">
                     <h2>افزودن هنرمند جدید</h2>
@@ -445,7 +416,6 @@
                 </div>
             </div>
 
-            <!-- Tracks Tab -->
             <div id="tracksTab" class="tab-content">
                 <div class="section">
                     <h2>افزودن آهنگ جدید</h2>
@@ -504,7 +474,6 @@
                 </div>
             </div>
 
-            <!-- Settings Tab -->
             <div id="settingsTab" class="tab-content">
                 <div class="section">
                     <h2>تنظیمات Firebase</h2>
@@ -525,7 +494,6 @@
             </div>
         </div>
 
-        <!-- Edit Modal -->
         <div id="editModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -537,13 +505,11 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
             authDomain: "shenoto-e26f5.firebaseapp.com",
@@ -554,7 +520,6 @@
             measurementId: "G-4L3KBNR48S"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -563,7 +528,6 @@
         let artists = [];
         let tracks = [];
 
-        // Check authentication state
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
@@ -575,7 +539,6 @@
             }
         });
 
-        // Login function
         async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
@@ -587,22 +550,15 @@
 
             try {
                 await auth.signInWithEmailAndPassword(email, password);
-                showMessage('loginMessage', 'ورود موفقیت‌آمیز', 'success');
             } catch (error) {
-                showMessage('loginMessage', 'خطا در ورود: ' + error.message, 'error');
+                showMessage('loginMessage', 'خطا: ' + error.message, 'error');
             }
         }
 
-        // Logout function
         async function logout() {
-            try {
-                await auth.signOut();
-            } catch (error) {
-                console.error('Error logging out:', error);
-            }
+            await auth.signOut();
         }
 
-        // Show/Hide sections
         function showAdminPanel() {
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('adminPanel').style.display = 'block';
@@ -613,22 +569,13 @@
             document.getElementById('adminPanel').style.display = 'none';
         }
 
-        // Load data from Firebase
         async function loadData() {
             try {
-                // Load artists
                 const artistsSnapshot = await db.collection('artists').get();
-                artists = artistsSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+                artists = artistsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
-                // Load tracks
                 const tracksSnapshot = await db.collection('tracks').get();
-                tracks = tracksSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+                tracks = tracksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 updateStats();
                 displayArtists();
@@ -640,14 +587,12 @@
             }
         }
 
-        // Update statistics
         function updateStats() {
             document.getElementById('artistCount').textContent = artists.length;
             document.getElementById('trackCount').textContent = tracks.length;
             document.getElementById('activeCount').textContent = artists.length + tracks.length;
         }
 
-        // Add new artist
         async function addArtist() {
             const name = document.getElementById('artistName').value;
             const photo = document.getElementById('artistPhoto').value;
@@ -666,7 +611,6 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Clear form
                 document.getElementById('artistName').value = '';
                 document.getElementById('artistPhoto').value = '';
                 document.getElementById('artistBio').value = '';
@@ -675,12 +619,10 @@
                 loadData();
 
             } catch (error) {
-                console.error('Error adding artist:', error);
-                alert('خطا در افزودن هنرمند');
+                alert('خطا: ' + error.message);
             }
         }
 
-        // Display artists
         function displayArtists() {
             const tbody = document.getElementById('artistsList');
             tbody.innerHTML = '';
@@ -691,6 +633,146 @@
                     <td><img src="${artist.photo}" alt="${artist.name}"></td>
                     <td>${artist.name}</td>
                     <td>${artist.bio ? artist.bio.substring(0, 50) + '...' : '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="editArtist('${artist.id}')">ویرایش</button>
+                            <button class="btn-delete" onclick="deleteArtist('${artist.id}')">حذف</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('artistsLoading').style.display = 'none';
+            document.getElementById('artistsTable').style.display = 'table';
+        }
+
+        async function deleteArtist(id) {
+            if (!confirm('آیا مطمئن هستید؟')) return;
+            try {
+                await db.collection('artists').doc(id).delete();
+                loadData();
+            } catch (error) {
+                alert('خطا: ' + error.message);
+            }
+        }
+
+        function editArtist(id) {
+            const artist = artists.find(a => a.id === id);
+            if (!artist) return;
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="form-group">
+                    <label>نام هنرمند:</label>
+                    <input type="text" id="editArtistName" value="${artist.name}">
+                </div>
+                <div class="form-group">
+                    <label>لینک عکس:</label>
+                    <input type="url" id="editArtistPhoto" value="${artist.photo}">
+                </div>
+                <div class="form-group">
+                    <label>بیوگرافی:</label>
+                    <textarea id="editArtistBio" rows="3">${artist.bio || ''}</textarea>
+                </div>
+                <button onclick="updateArtist('${id}')" class="btn-success" style="width: 100%; margin-top: 20px;">ذخیره</button>
+            `;
+
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        async function updateArtist(id) {
+            const name = document.getElementById('editArtistName').value;
+            const photo = document.getElementById('editArtistPhoto').value;
+            const bio = document.getElementById('editArtistBio').value;
+
+            try {
+                await db.collection('artists').doc(id).update({
+                    name: name,
+                    photo: photo,
+                    bio: bio
+                });
+
+                closeModal();
+                loadData();
+
+            } catch (error) {
+                alert('خطا: ' + error.message);
+            }
+        }
+
+        function populateSelectBoxes() {
+            const selects = ['trackSinger', 'trackLyricist', 'trackComposer', 'trackArranger'];
+            
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">انتخاب کنید...</option>';
+                
+                artists.forEach(artist => {
+                    const option = document.createElement('option');
+                    option.value = artist.id;
+                    option.textContent = artist.name;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        async function addTrack() {
+            const name = document.getElementById('trackName').value;
+            const url = document.getElementById('trackUrl').value;
+            const singer = document.getElementById('trackSinger').value;
+            const lyricist = document.getElementById('trackLyricist').value;
+            const composer = document.getElementById('trackComposer').value;
+            const arranger = document.getElementById('trackArranger').value;
+
+            if (!name || !url) {
+                alert('لطفاً نام و لینک آهنگ را وارد کنید');
+                return;
+            }
+
+            try {
+                await db.collection('tracks').add({
+                    track_name: name,
+                    track_url: url,
+                    singer: singer || null,
+                    lyricist: lyricist || null,
+                    composer: composer || null,
+                    arranger: arranger || null,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                document.getElementById('trackName').value = '';
+                document.getElementById('trackUrl').value = '';
+                document.getElementById('trackSinger').value = '';
+                document.getElementById('trackLyricist').value = '';
+                document.getElementById('trackComposer').value = '';
+                document.getElementById('trackArranger').value = '';
+
+                showMessage('trackMessage', 'آهنگ با موفقیت اضافه شد', 'success');
+                loadData();
+
+            } catch (error) {
+                alert('خطا: ' + error.message);
+            }
+        }
+
+        function displayTracks() {
+            const tbody = document.getElementById('tracksList');
+            tbody.innerHTML = '';
+
+            tracks.forEach(track => {
+                const singer = artists.find(a => a.id === track.singer);
+                const lyricist = artists.find(a => a.id === track.lyricist);
+                const composer = artists.find(a => a.id === track.composer);
+                const arranger = artists.find(a => a.id === track.arranger);
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${track.track_name}</td>
+                    <td>${singer ? singer.name : '-'}</td>
+                    <td>${lyricist ? lyricist.name : '-'}</td>
+                    <td>${composer ? composer.name : '-'}</td>
+                    <td>${arranger ? arranger.name : '-'}</td>
                     <td>
                         <div class="action-buttons">
                             <button class="btn-edit" onclick="editTrack('${track.id}')">ویرایش</button>
@@ -705,37 +787,25 @@
             document.getElementById('tracksTable').style.display = 'table';
         }
 
-        // Delete track
         async function deleteTrack(id) {
-            if (!confirm('آیا از حذف این آهنگ مطمئن هستید؟')) return;
-
+            if (!confirm('آیا مطمئن هستید؟')) return;
             try {
                 await db.collection('tracks').doc(id).delete();
                 loadData();
             } catch (error) {
-                console.error('Error deleting track:', error);
-                alert('خطا در حذف آهنگ');
+                alert('خطا: ' + error.message);
             }
         }
 
-        // Edit track - FIXED VERSION
         function editTrack(id) {
-            console.log('editTrack called with id:', id);
-            
             const track = tracks.find(t => t.id === id);
-            console.log('Track found:', track);
-            
-            if (!track) {
-                alert('آهنگ پیدا نشد');
-                return;
-            }
+            if (!track) return;
 
             const singer = track.singer || '';
             const lyricist = track.lyricist || '';
             const composer = track.composer || '';
             const arranger = track.arranger || '';
 
-            // Build artist options
             let singerOptions = '<option value="">انتخاب کنید...</option>';
             let lyricistOptions = '<option value="">انتخاب کنید...</option>';
             let composerOptions = '<option value="">انتخاب کنید...</option>';
@@ -753,7 +823,7 @@
             modalBody.innerHTML = `
                 <div class="form-group">
                     <label>نام آهنگ:</label>
-                    <input type="text" id="editTrackName" value="${escapeHtml(track.track_name)}">
+                    <input type="text" id="editTrackName" value="${track.track_name}">
                 </div>
                 <div class="form-group">
                     <label>لینک آهنگ:</label>
@@ -786,15 +856,10 @@
                 <button onclick="updateTrack('${id}')" class="btn-success" style="width: 100%; margin-top: 20px;">ذخیره تغییرات</button>
             `;
 
-            const modal = document.getElementById('editModal');
-            modal.style.display = 'flex';
-            console.log('Modal displayed');
+            document.getElementById('editModal').style.display = 'flex';
         }
 
-        // Update track
         async function updateTrack(id) {
-            console.log('updateTrack called with id:', id);
-            
             const name = document.getElementById('editTrackName').value;
             const url = document.getElementById('editTrackUrl').value;
             const singer = document.getElementById('editTrackSinger').value;
@@ -814,32 +879,25 @@
                     singer: singer || null,
                     lyricist: lyricist || null,
                     composer: composer || null,
-                    arranger: arranger || null,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    arranger: arranger || null
                 });
 
-                console.log('Track updated successfully');
                 closeModal();
                 loadData();
 
             } catch (error) {
-                console.error('Error updating track:', error);
-                alert('خطا در بروزرسانی آهنگ: ' + error.message);
+                alert('خطا: ' + error.message);
             }
         }
 
-        // Switch tabs
         function switchTab(tab) {
-            // Update tab buttons
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
 
-            // Update tab content
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.getElementById(tab + 'Tab').classList.add('active');
         }
 
-        // Export data
         function exportData() {
             const data = {
                 artists: artists,
@@ -856,7 +914,6 @@
             a.click();
         }
 
-        // Import data
         async function importData() {
             const file = document.getElementById('importFile').files[0];
             if (!file) {
@@ -871,13 +928,11 @@
                     
                     if (!confirm('آیا از جایگزینی داده‌های فعلی مطمئن هستید؟')) return;
 
-                    // Add artists
                     for (const artist of data.artists) {
                         delete artist.id;
                         await db.collection('artists').add(artist);
                     }
 
-                    // Add tracks
                     for (const track of data.tracks) {
                         delete track.id;
                         await db.collection('tracks').add(track);
@@ -887,22 +942,16 @@
                     loadData();
 
                 } catch (error) {
-                    console.error('Error importing data:', error);
                     alert('خطا در بارگذاری فایل');
                 }
             };
             reader.readAsText(file);
         }
 
-        // Close modal
         function closeModal() {
-            const modal = document.getElementById('editModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
+            document.getElementById('editModal').style.display = 'none';
         }
 
-        // Show message
         function showMessage(elementId, message, type) {
             const element = document.getElementById(elementId);
             if (element) {
@@ -914,164 +963,6 @@
                 }, 5000);
             }
         }
-
-        // Helper function to escape HTML special characters
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
     </script>
 </body>
-</html><button class="btn-edit" onclick="editArtist('${artist.id}')">ویرایش</button>
-                            <button class="btn-delete" onclick="deleteArtist('${artist.id}')">حذف</button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-
-            document.getElementById('artistsLoading').style.display = 'none';
-            document.getElementById('artistsTable').style.display = 'table';
-        }
-
-        // Delete artist
-        async function deleteArtist(id) {
-            if (!confirm('آیا از حذف این هنرمند مطمئن هستید؟')) return;
-
-            try {
-                await db.collection('artists').doc(id).delete();
-                loadData();
-            } catch (error) {
-                console.error('Error deleting artist:', error);
-                alert('خطا در حذف هنرمند');
-            }
-        }
-
-        // Edit artist
-        function editArtist(id) {
-            const artist = artists.find(a => a.id === id);
-            if (!artist) return;
-
-            const modalBody = document.getElementById('modalBody');
-            modalBody.innerHTML = `
-                <div class="form-group">
-                    <label>نام هنرمند:</label>
-                    <input type="text" id="editArtistName" value="${escapeHtml(artist.name)}">
-                </div>
-                <div class="form-group">
-                    <label>لینک عکس:</label>
-                    <input type="url" id="editArtistPhoto" value="${artist.photo}">
-                </div>
-                <div class="form-group">
-                    <label>بیوگرافی:</label>
-                    <textarea id="editArtistBio" rows="3">${escapeHtml(artist.bio || '')}</textarea>
-                </div>
-                <button onclick="updateArtist('${id}')" class="btn-success" style="width: 100%; margin-top: 20px;">ذخیره تغییرات</button>
-            `;
-
-            document.getElementById('editModal').style.display = 'flex';
-        }
-
-        // Update artist
-        async function updateArtist(id) {
-            const name = document.getElementById('editArtistName').value;
-            const photo = document.getElementById('editArtistPhoto').value;
-            const bio = document.getElementById('editArtistBio').value;
-
-            try {
-                await db.collection('artists').doc(id).update({
-                    name: name,
-                    photo: photo,
-                    bio: bio,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                closeModal();
-                loadData();
-
-            } catch (error) {
-                console.error('Error updating artist:', error);
-                alert('خطا در بروزرسانی هنرمند');
-            }
-        }
-
-        // Populate select boxes
-        function populateSelectBoxes() {
-            const selects = ['trackSinger', 'trackLyricist', 'trackComposer', 'trackArranger'];
-            
-            selects.forEach(selectId => {
-                const select = document.getElementById(selectId);
-                select.innerHTML = '<option value="">انتخاب کنید...</option>';
-                
-                artists.forEach(artist => {
-                    const option = document.createElement('option');
-                    option.value = artist.id;
-                    option.textContent = artist.name;
-                    select.appendChild(option);
-                });
-            });
-        }
-
-        // Add new track
-        async function addTrack() {
-            const name = document.getElementById('trackName').value;
-            const url = document.getElementById('trackUrl').value;
-            const singer = document.getElementById('trackSinger').value;
-            const lyricist = document.getElementById('trackLyricist').value;
-            const composer = document.getElementById('trackComposer').value;
-            const arranger = document.getElementById('trackArranger').value;
-
-            if (!name || !url) {
-                alert('لطفاً نام و لینک آهنگ را وارد کنید');
-                return;
-            }
-
-            try {
-                await db.collection('tracks').add({
-                    track_name: name,
-                    track_url: url,
-                    singer: singer || null,
-                    lyricist: lyricist || null,
-                    composer: composer || null,
-                    arranger: arranger || null,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // Clear form
-                document.getElementById('trackName').value = '';
-                document.getElementById('trackUrl').value = '';
-                document.getElementById('trackSinger').value = '';
-                document.getElementById('trackLyricist').value = '';
-                document.getElementById('trackComposer').value = '';
-                document.getElementById('trackArranger').value = '';
-
-                showMessage('trackMessage', 'آهنگ با موفقیت اضافه شد', 'success');
-                loadData();
-
-            } catch (error) {
-                console.error('Error adding track:', error);
-                alert('خطا در افزودن آهنگ');
-            }
-        }
-
-        // Display tracks - UPDATED WITH EDIT BUTTON
-        function displayTracks() {
-            const tbody = document.getElementById('tracksList');
-            tbody.innerHTML = '';
-
-            tracks.forEach(track => {
-                const singer = artists.find(a => a.id === track.singer);
-                const lyricist = artists.find(a => a.id === track.lyricist);
-                const composer = artists.find(a => a.id === track.composer);
-                const arranger = artists.find(a => a.id === track.arranger);
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${track.track_name}</td>
-                    <td>${singer ? singer.name : '-'}</td>
-                    <td>${lyricist ? lyricist.name : '-'}</td>
-                    <td>${composer ? composer.name : '-'}</td>
-                    <td>${arranger ? arranger.name : '-'}</td>
-                    <td>
-                        <div class="action-buttons">
+</html>
