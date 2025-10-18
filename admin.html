@@ -818,35 +818,37 @@
             }
         }
 
-        function displayTracks() {
-            const tbody = document.getElementById('tracksList');
-            tbody.innerHTML = '';
+// Display tracks (UPDATED - includes edit button)
+function displayTracks() {
+    const tbody = document.getElementById('tracksList');
+    tbody.innerHTML = '';
 
-            tracks.forEach(track => {
-                const singer = artists.find(a => a.id === track.singer);
-                const lyricist = artists.find(a => a.id === track.lyricist);
-                const composer = artists.find(a => a.id === track.composer);
-                const arranger = artists.find(a => a.id === track.arranger);
+    tracks.forEach(track => {
+        const singer = artists.find(a => a.id === track.singer);
+        const lyricist = artists.find(a => a.id === track.lyricist);
+        const composer = artists.find(a => a.id === track.composer);
+        const arranger = artists.find(a => a.id === track.arranger);
 
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${track.track_name}</td>
-                    <td>${singer ? singer.name : '-'}</td>
-                    <td>${lyricist ? lyricist.name : '-'}</td>
-                    <td>${composer ? composer.name : '-'}</td>
-                    <td>${arranger ? arranger.name : '-'}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-delete" onclick="deleteTrack('${track.id}')">حذف</button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${track.track_name}</td>
+            <td>${singer ? singer.name : '-'}</td>
+            <td>${lyricist ? lyricist.name : '-'}</td>
+            <td>${composer ? composer.name : '-'}</td>
+            <td>${arranger ? arranger.name : '-'}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn-edit" onclick="editTrack('${track.id}')">ویرایش</button>
+                    <button class="btn-delete" onclick="deleteTrack('${track.id}')">حذف</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
 
-            document.getElementById('tracksLoading').style.display = 'none';
-            document.getElementById('tracksTable').style.display = 'table';
-        }
+    document.getElementById('tracksLoading').style.display = 'none';
+    document.getElementById('tracksTable').style.display = 'table';
+}
 
         async function deleteTrack(id) {
             if (!confirm('آیا از حذف این آهنگ مطمئن هستید؟')) return;
