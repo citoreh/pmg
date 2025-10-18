@@ -104,19 +104,39 @@
         }
 
         .preview-card {
-            width: 150px;
-            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(46, 58, 89, 0.3);
+            border: 2px solid #B87333;
             border-radius: 15px;
+            min-width: 180px;
+        }
+
+        .preview-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
             overflow: hidden;
             border: 3px solid #D4AF37;
             box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
         }
 
-        .preview-card img {
+        .preview-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             filter: sepia(100%) hue-rotate(180deg) saturate(150%) brightness(90%);
+        }
+
+        .preview-label {
+            color: #D4AF37;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+            font-family: 'Vazirmatn', 'Segoe UI', sans-serif;
         }
 
         .role-buttons {
@@ -124,32 +144,6 @@
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
-        }
-
-        .role-btn {
-            padding: 30px 20px;
-            background: linear-gradient(135deg, #2E3A59, #1A1A1A);
-            border: 3px solid #B87333;
-            border-radius: 15px;
-            color: #F5F5F5;
-            font-size: 1.3em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-        }
-
-        .role-btn:hover {
-            transform: translateY(-5px);
-            border-color: #D4AF37;
-            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
-        }
-
-        .role-btn.selected {
-            background: linear-gradient(135deg, #D4AF37, #B87333);
-            color: #0D0D0D;
-            border-color: #D4AF37;
-            transform: scale(1.05);
         }
 
         .controls {
@@ -733,10 +727,15 @@
         <div id="roleSelectionScreen" class="role-selection">
             <h2>گروه مورد نظر خود را انتخاب کنید</h2>
             <div id="rolePreviewContainer" class="role-preview"></div>
+        </div>
+
+        <div id="levelSelectionScreen" style="display: none;" class="role-selection">
+            <h2>سطح دشواری را انتخاب کنید</h2>
             <div class="role-buttons">
-                <button class="role-btn" data-role="lyricist">✍️ ترانه‌سرا</button>
-                <button class="role-btn" data-role="composer">🎹 آهنگساز</button>
-                <button class="role-btn" data-role="arranger">🎼 تنظیم‌کننده</button>
+                <button class="role-btn" data-level="easy">🟢 مبتدی</button>
+                <button class="role-btn" data-level="medium">🟡 علاقمند</button>
+                <button class="role-btn" data-level="hard">🔴 این کاره</button>
+                <button class="role-btn" data-level="extreme">⚫ حرفه‌ای</button>
             </div>
         </div>
 
@@ -849,9 +848,16 @@
         let pausedTime = 0;
         let pauseStartTime = 0;
         let gameArtists = [];
+        let gameDifficulty = null;
+
+        const DIFFICULTY_LEVELS = {
+            easy: { label: 'مبتدی', count: 5 },
+            medium: { label: 'علاقمند', count: 10 },
+            hard: { label: 'این کاره', count: 20 },
+            extreme: { label: 'حرفه‌ای', count: 40 }
+        };
 
         const MIN_FINAL_OPTIONS = 2;
-        const MAX_ARTISTS = 20;
         const FINAL_POINTS = 4;
         const audioPlayer = document.getElementById('audioPlayer');
 
@@ -897,33 +903,67 @@
 
         // Setup role selection with preview images
         function setupRoleSelection() {
-            // Show random artist preview for each role
-            const roles = ['lyricist', 'composer', 'arranger'];
+            const roles = [
+                { id: 'lyricist', label: '✍️ ترانه‌سرا' },
+                { id: 'composer', label: '🎹 آهنگساز' },
+                { id: 'arranger', label: '🎼 تنظیم‌کننده' }
+            ];
             const previewContainer = document.getElementById('rolePreviewContainer');
             previewContainer.innerHTML = '';
 
-            roles.forEach((role, index) => {
-                const roleArtists = getArtistsForRole(role);
+            roles.forEach((role) => {
+                const roleArtists = getArtistsForRole(role.id);
                 if (roleArtists.length > 0) {
                     const randomArtist = roleArtists[Math.floor(Math.random() * roleArtists.length)];
                     const card = document.createElement('div');
                     card.className = 'preview-card';
-                    card.innerHTML = `<img src="${randomArtist.photo}" alt="${randomArtist.name}" />`;
+                    card.innerHTML = `
+                        <div class="preview-image">
+                            <img src="${randomArtist.photo}" alt="${randomArtist.name}" />
+                        </div>
+                        <div class="preview-label">${role.label}</div>
+                    `;
+                    card.style.cursor = 'pointer';
+                    card.addEventListener('click', () => selectRole(role.id));
                     previewContainer.appendChild(card);
                 }
             });
+        }
 
-            document.querySelectorAll('.role-btn').forEach(btn => {
+        // Select role and show level selection
+        function selectRole(role) {
+            currentRole = role;
+            document.getElementById('roleSelectionScreen').style.display = 'none';
+            document.getElementById('levelSelectionScreen').style.display = 'block';
+            
+            document.querySelectorAll('#levelSelectionScreen .role-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
-                    this.classList.add('selected');
-                    currentRole = this.dataset.role;
-                    
-                    setTimeout(() => {
-                        startGameWithRole(currentRole);
-                    }, 500);
+                    selectLevel(this.dataset.level);
                 });
             });
+        }
+
+        // Select level and start game
+        function selectLevel(level) {
+            gameDifficulty = level;
+            const maxArtists = DIFFICULTY_LEVELS[level].count;
+            
+            document.getElementById('levelSelectionScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            
+            const roleNames = {
+                'lyricist': 'ترانه‌سرا',
+                'composer': 'آهنگساز',
+                'arranger': 'تنظیم‌کننده'
+            };
+            
+            document.getElementById('currentRoleDisplay').textContent = `🎵 نقش: ${roleNames[currentRole]} | سطح: ${DIFFICULTY_LEVELS[level].label}`;
+            
+            const allArtists = getArtistsForRole(currentRole);
+            gameArtists = shuffle(allArtists).slice(0, maxArtists);
+            console.log(`Game artists for level ${level}:`, gameArtists.length);
+            
+            displayArtists();
         }
 
         // Get artists for specific role
@@ -1029,8 +1069,6 @@
             document.getElementById('trackInfo').classList.remove('hide-title');
             document.getElementById('singerName').textContent = currentTrack.singer;
             document.getElementById('trackName').textContent = currentTrack.name || 'بدون عنوان';
-
-            audioPlayer.src = currentTrack.url;
             
             audioPlayer.addEventListener('loadedmetadata', function startPlayback() {
                 audioPlayer.removeEventListener('loadedmetadata', startPlayback);
@@ -1297,6 +1335,7 @@
             document.getElementById('status').textContent = 'روی دکمه کلیک کنید تا دور بعدی شروع شود!';
             document.getElementById('status').classList.remove('playing');
             document.getElementById('status').style.color = '#A0A0A0';
+            document.getElementById('trackInfo').style.display = 'none';
         };
 
         window.closeRules = function() {
