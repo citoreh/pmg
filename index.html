@@ -113,6 +113,13 @@
             border: 2px solid #B87333;
             border-radius: 15px;
             min-width: 180px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preview-card:hover {
+            border-color: #D4AF37;
+            background: rgba(212, 175, 55, 0.1);
         }
 
         .preview-image {
@@ -797,7 +804,7 @@
             <div class="role-buttons">
                 <button class="role-btn" data-level="easy">🟢 مبتدی</button>
                 <button class="role-btn" data-level="medium">🟡 علاقمند</button>
-                <button class="role-btn" data-level="hard">🔴 این کاره</button>
+                <button class="role-btn" data-level="hard">🔴 این کار</button>
                 <button class="role-btn" data-level="extreme">⚫ حرفه‌ای</button>
             </div>
         </div>
@@ -826,7 +833,7 @@
 
             <div id="content" class="loading">در حال بارگذاری هنرمندان...</div>
 
-            <audio id="audioPlayer"></audio>
+            <audio id="audioPlayer" preload="auto" crossorigin="anonymous"></audio>
         </div>
 
         <div class="game-footer" id="gameFooter">
@@ -862,11 +869,14 @@
             <h2>🎮 راهنمای بازی</h2>
             <h3>🎯 هدف</h3>
             <p>هر چه سریع‌تر هنرمند را حدس بزنید! امتیاز با گذشت زمان کاهش می‌یابد.</p>
-            <h3>📋 قوانین</h3>
-            <p>• تا ۲۰ نفر هنرمند برای انتخاب وجود دارد</p>
-            <p>• با هر حدس اشتباه، پروفایل آن پنهان می‌شود</p>
-            <p>• در انتهای آهنگ تنها ۲ نفر برای انتخاب نهایی باقی می‌مانند</p>
-            <p>• امتیازات شما در انتهای بازی نمایش داده می‌شود</p>
+            <h3>📊 سیستم امتیازدهی</h3>
+            <p>مرحله اول: تا ۱۰۰ امتیاز</p>
+            <p>مرحله دوم و بعدی: امتیاز دو برابر می‌شود</p>
+            <h3>💡 نکات</h3>
+            <p>• هنرمندان ناآشنا به تدریج پنهان می‌شوند</p>
+            <p>• انتخاب اشتباه امتیاز منفی می‌دهد</p>
+            <p>• سریع‌تر انتخاب کنید، بیشتر امتیاز بگیرید!</p>
+            <p>• سطح دشواری بر تعداد گزینه‌ها تأثیر می‌گذارد</p>
             <button class="close-rules-btn" onclick="closeRules()">بیایید بازی کنیم! 🎵</button>
         </div>
     </div>
@@ -892,12 +902,14 @@
         let artists = [];
         let tracks = [];
         let currentRole = null;
-        let filteredArtists = [];
+        let gameDifficulty = null;
+        let gameArtists = [];
         let currentTrack = null;
         let correctArtist = null;
         let positiveScore = 0;
         let negativeScore = 0;
         let currentPoints = 100;
+        let basePoints = 100;
         let gameActive = false;
         let progressInterval = null;
         let hideInterval = null;
@@ -910,13 +922,12 @@
         let isPaused = false;
         let pausedTime = 0;
         let pauseStartTime = 0;
-        let gameArtists = [];
-        let gameDifficulty = null;
+        let roundCount = 0;
 
         const DIFFICULTY_LEVELS = {
             easy: { label: 'مبتدی', count: 5 },
             medium: { label: 'علاقمند', count: 10 },
-            hard: { label: 'این کاره', count: 20 },
+            hard: { label: 'این کار', count: 20 },
             extreme: { label: 'حرفه‌ای', count: 40 }
         };
 
@@ -986,47 +997,10 @@
                         </div>
                         <div class="preview-label">${role.label}</div>
                     `;
-                    card.style.cursor = 'pointer';
                     card.addEventListener('click', () => selectRole(role.id));
                     previewContainer.appendChild(card);
                 }
             });
-        }
-
-        // Select role and show level selection
-        function selectRole(role) {
-            currentRole = role;
-            document.getElementById('roleSelectionScreen').style.display = 'none';
-            document.getElementById('levelSelectionScreen').style.display = 'block';
-            
-            document.querySelectorAll('#levelSelectionScreen .role-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    selectLevel(this.dataset.level);
-                });
-            });
-        }
-
-        // Select level and start game
-        function selectLevel(level) {
-            gameDifficulty = level;
-            const maxArtists = DIFFICULTY_LEVELS[level].count;
-            
-            document.getElementById('levelSelectionScreen').style.display = 'none';
-            document.getElementById('gameScreen').style.display = 'block';
-            
-            const roleNames = {
-                'lyricist': 'ترانه‌سرا',
-                'composer': 'آهنگساز',
-                'arranger': 'تنظیم‌کننده'
-            };
-            
-            document.getElementById('currentRoleDisplay').textContent = `🎵 نقش: ${roleNames[currentRole]} | سطح: ${DIFFICULTY_LEVELS[level].label}`;
-            
-            const allArtists = getArtistsForRole(currentRole);
-            gameArtists = shuffle(allArtists).slice(0, maxArtists);
-            console.log(`Game artists for level ${level}:`, gameArtists.length);
-            
-            displayArtists();
         }
 
         // Get artists for specific role
@@ -1062,9 +1036,25 @@
             return Array.from(artistMap.values());
         }
 
-        // Start game with selected role
-        function startGameWithRole(role) {
+        // Select role and show level selection
+        function selectRole(role) {
+            currentRole = role;
             document.getElementById('roleSelectionScreen').style.display = 'none';
+            document.getElementById('levelSelectionScreen').style.display = 'block';
+            
+            document.querySelectorAll('#levelSelectionScreen .role-btn').forEach(btn => {
+                btn.onclick = function() {
+                    selectLevel(this.dataset.level);
+                };
+            });
+        }
+
+        // Select level and start game
+        function selectLevel(level) {
+            gameDifficulty = level;
+            const maxArtists = DIFFICULTY_LEVELS[level].count;
+            
+            document.getElementById('levelSelectionScreen').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'block';
             
             const roleNames = {
@@ -1073,13 +1063,20 @@
                 'arranger': 'تنظیم‌کننده'
             };
             
-            document.getElementById('currentRoleDisplay').textContent = `🎵 نقش انتخابی: ${roleNames[role]}`;
+            roundCount = 0;
+            basePoints = 100;
+            updateDifficultyIndicator(roleNames[currentRole]);
             
-            const allArtists = getArtistsForRole(role);
-            gameArtists = shuffle(allArtists).slice(0, MAX_ARTISTS);
-            console.log(`Game artists for role ${role}:`, gameArtists.length);
+            const allArtists = getArtistsForRole(currentRole);
+            gameArtists = shuffle(allArtists).slice(0, maxArtists);
+            console.log(`Game artists for level ${level}:`, gameArtists.length);
             
             displayArtists();
+        }
+
+        function updateDifficultyIndicator(roleName) {
+            const levelLabel = DIFFICULTY_LEVELS[gameDifficulty].label;
+            document.getElementById('currentRoleDisplay').textContent = `🎵 نقش: ${roleName} | سطح: ${levelLabel} | دور: ${roundCount + 1}`;
         }
 
         // Display artists grid
@@ -1133,33 +1130,47 @@
             document.getElementById('singerName').textContent = currentTrack.singer;
             document.getElementById('trackName').textContent = currentTrack.name || 'بدون عنوان';
             
-            audioPlayer.addEventListener('loadedmetadata', function startPlayback() {
-                audioPlayer.removeEventListener('loadedmetadata', startPlayback);
+            audioPlayer.src = currentTrack.url;
+            
+            // FIX: Use canplaythrough for better reliability
+            audioPlayer.oncanplaythrough = function() {
+                console.log('Audio ready to play:', currentTrack.url);
                 trackDuration = audioPlayer.duration;
                 startTime = Date.now();
-                audioPlayer.play();
-                gameActive = true;
+                
+                audioPlayer.play().then(() => {
+                    console.log('Audio playing successfully');
+                    gameActive = true;
+                    
+                    document.getElementById('status').textContent = '🎵 با دقت گوش دهید! برای امتیاز بیشتر سریع انتخاب کنید!';
+                    document.getElementById('status').classList.add('playing');
 
-                document.getElementById('status').textContent = '🎵 با دقت گوش دهید! برای امتیاز بیشتر سریع انتخاب کنید!';
-                document.getElementById('status').classList.add('playing');
+                    visibleArtists = Array.from(document.querySelectorAll('.artist-card'));
+                    visibleArtists.forEach(card => {
+                        card.classList.remove('correct', 'wrong', 'disabled', 'hidden');
+                        card.style.display = 'block';
+                    });
 
-                visibleArtists = Array.from(document.querySelectorAll('.artist-card'));
-                visibleArtists.forEach(card => {
-                    card.classList.remove('correct', 'wrong', 'disabled', 'hidden');
-                    card.style.display = 'block';
+                    showGameFooter();
+                    startProgressBar();
+                    startHidingArtists();
+                }).catch(error => {
+                    console.error('Error playing audio:', error);
+                    document.getElementById('status').textContent = '❌ خطا در پخش آهنگ';
                 });
+            };
 
-                showGameFooter();
-                startProgressBar();
-                startHidingArtists();
-            });
+            audioPlayer.onerror = function() {
+                console.error('Error loading audio:', audioPlayer.error);
+                document.getElementById('status').textContent = '❌ خطا در بارگذاری آهنگ';
+            };
 
             audioPlayer.load();
         }
 
         // Reset round
         function resetRound() {
-            currentPoints = 100;
+            currentPoints = basePoints;
             gameActive = false;
             finalChoiceMode = false;
             isPaused = false;
@@ -1180,7 +1191,6 @@
             }
 
             if (artist.id === correctArtist.id) {
-                // Correct guess
                 audioPlayer.pause();
                 gameActive = false;
                 clearInterval(progressInterval);
@@ -1201,14 +1211,12 @@
                 saveScores();
                 hideGameFooter();
 
-                // Hide track title with animation
                 document.getElementById('trackInfo').classList.add('hide-title');
 
                 setTimeout(() => {
                     showResultSection(artist);
                 }, 2000);
             } else {
-                // Wrong guess
                 card.classList.add('wrong');
                 negativeScore += currentPoints;
                 currentStreak = 0;
@@ -1232,8 +1240,6 @@
             const bioHTML = correctArtist.bio ? `
                 <div class="artist-bio">${correctArtist.bio}</div>
             ` : '';
-            
-            const shareText = encodeURIComponent(`🎵 من در شنوتو ${toPersianNumber(currentPoints.toFixed(0))} امتیاز کسب کردم!\n🎭 من ${currentRole === 'lyricist' ? 'ترانه‌سرا' : currentRole === 'composer' ? 'آهنگساز' : 'تنظیم‌کننده'} را شناخت‌ام!`);
             
             const resultHTML = `
                 <div class="result-section">
@@ -1272,13 +1278,12 @@
                 navigator.share({
                     title: 'شنوتو - بازی موسیقی ایرانی',
                     text: text
-                }).catch(err => console.log('Share cancelled or error:', err));
+                }).catch(err => console.log('Share cancelled:', err));
             } else {
-                // Fallback: copy to clipboard
                 navigator.clipboard.writeText(text).then(() => {
                     alert('متن به کلیپ‌بورد کپی شد!');
                 }).catch(() => {
-                    alert('امکان اشتراک‌گذاری برای این مرورگر وجود ندارد.');
+                    alert('اشتراک‌گذاری برای این مرورگر دردسترس نیست.');
                 });
             }
         };
@@ -1291,7 +1296,7 @@
                 const elapsed = (Date.now() - startTime - pausedTime) / 1000;
                 const progress = (elapsed / trackDuration) * 100;
                 
-                currentPoints = Math.max(FINAL_POINTS, 100 - (elapsed / trackDuration) * (100 - FINAL_POINTS));
+                currentPoints = Math.max(FINAL_POINTS, basePoints - (elapsed / trackDuration) * (basePoints - FINAL_POINTS));
                 
                 document.getElementById('progressBarFill').style.width = Math.min(progress, 100) + '%';
                 updateFooterPoints();
@@ -1392,6 +1397,16 @@
 
         // Global functions
         window.startNextRound = function() {
+            roundCount++;
+            basePoints = 100 * Math.pow(2, roundCount - 1);
+            
+            const roleNames = {
+                'lyricist': 'ترانه‌سرا',
+                'composer': 'آهنگساز',
+                'arranger': 'تنظیم‌کننده'
+            };
+            updateDifficultyIndicator(roleNames[currentRole]);
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
             displayArtists();
             document.getElementById('startDiceBtn').disabled = false;
