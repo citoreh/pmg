@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="حدس بزنید خواننده، ترانه‌سرا، آهنگساز یا تنظیم‌کننده را با گوش دادن به موسیقی ایرانی!">
+    <meta name="theme-color" content="#D4AF37">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <title>شنوتو - بازی موسیقی ایرانی</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 50%, #2E3A59 100%);
+            min-height: 100vh;
+            color: #F5F5F5;
+            padding: 0;
+            direction: rtl;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 10px;
+            min-height: 100vh;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(212, 175, 55, 0.3);
+            border-top: 5px solid #D4AF37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #D4AF37;
+            font-size: 1.1em;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            background: linear-gradient(45deg, #D4AF37, #B87333, #D4AF37);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            color: #A0A0A0;
+            font-style: italic;
+            font-size: 0.95em;
+        }
+
+        .role-selection {
+            text-align: center;
+            margin: 30px auto;
+        }
+
+        .role-selection h2 {
+            color: #D4AF37;
+            font-size: 1.8em;
+            margin-bottom: 25px;
+        }
+
+        .role-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .role-btn {
+            padding: 18px 15px;
+            background: linear-gradient(135deg, #2E3A59, #1A1A1A);
+            border: 3px solid #B87333;
+            border-radius: 12px;
+            color: #F5F5F5;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .role-btn:active {
+            transform: translateY(-3px);
+            border-color: #D4AF37;
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .role-btn.selected {
+            background: linear-gradient(135deg, #D4AF37, #B87333);
+            color: #0D0D0D;
+            border-color: #D4AF37;
+            transform: scale(1.05);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(46, 58, 89, 0.3);
+            border-radius: 10px;
+            border: 2px solid #B87333;
+            gap: 8px;
+        }
+
+        .level-info {
+            text-align: center;
+            flex: 1;
+        }
+
+        .level-badge {
+            color: #D4AF37;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .score-badge {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .track-info {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(46, 58, 89, 0.4), rgba(26, 26, 26, 0.6));
+            border-radius: 12px;
+            border: 2px solid #D4AF37;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .track-details {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .track-info .singer-name {
+            color: #D4AF37;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .track-info .separator {
+            color: #B87333;
+            font-size: 1.1em;
+        }
+
+        .track-info .track-name {
+            color: #F5F5F5;
+            font-size: 1em;
+        }
+
+        .play-pause-btn {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #D4AF37, #B87333);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5em;
+            color: #0D0D0D;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+            margin-top: 10px;
+        }
+
+        .play-pause-btn:active {
+            transform: scale(0.95);
+        }
+
+        .play-pause-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            min-height: 30px;
+            color: #A0A0A0;
+        }
+
+        .status.playing {
+            color: #D4AF37;
+            font-weight: bold;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .option-card {
+            padding: 15px;
+            background: linear-gradient(135deg, #2E3A59, #1A1A1A);
+            border: 2px solid #B87333;
+            border-radius: 10px;
+            color: #F5F5F5;
+            font-size: 0.95em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .option-card:active {
+            transform: scale(0.98);
+        }
+
+        .option-card.disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .option-card.correct {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            border-color: #2ecc71;
+            animation: correctPulse 0.6s ease;
+        }
+
+        .option-card.wrong {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border-color: #e74c3c;
+            animation: wrongShake 0.6s ease;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+        }
+
+        .start-btn, .next-btn, .menu-btn, .leaderboard-btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #D4AF37, #B87333);
+            border: none;
+            border-radius: 10px;
+            color: #0D0D0D;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+            font-family: 'Vazirmatn', sans-serif;
+            margin: 5px;
+        }
+
+        .start-btn:active, .next-btn:active, .menu-btn:active, .leaderboard-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .menu-btn, .leaderboard-btn {
+            background: linear-gradient(135deg, #2E3A59, #1A1A1A);
+            border: 2px solid #D4AF37;
+            color: #D4AF37;
+        }
+
+        .result-section {
+            text-align: center;
+            padding: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-header h2 {
+            color: #D4AF37;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .artist-reveal {
+            padding: 15px;
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 12px;
+            border: 2px solid #D4AF37;
+            margin-bottom: 15px;
+        }
+
+        .artist-reveal h3 {
+            color: #D4AF37;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .artist-reveal p {
+            color: #A0A0A0;
+            font-size: 0.95em;
+        }
+
+        .points-display {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .session-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .stat-box {
+            padding: 12px;
+            background: rgba(46, 58, 89, 0.3);
+            border-radius: 8px;
+            border: 2px solid #B87333;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #A0A0A0;
+            font-size: 0.85em;
+        }
+
+        .stat-value {
+            color: #D4AF37;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .leaderboard-screen {
+            display: none;
+        }
+
+        .leaderboard-screen.active {
+            display: block;
+        }
+
+        .leaderboard-list {
+            background: rgba(26, 26, 26, 0.5);
+            border-radius: 12px;
+            border: 2px solid #D4AF37;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .leaderboard-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+
+        .leaderboard-rank {
+            color: #D4AF37;
+            font-weight: bold;
+            font-size: 1.2em;
+            min-width: 30px;
+        }
+
+        .leaderboard-name {
+            color: #F5F5F5;
+            font-weight: bold;
+            flex: 1;
+            margin: 0 15px;
+            text-align: right;
+        }
+
+        .leaderboard-score {
+            color: #2ecc71;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .leaderboard-item.top-1 { background: rgba(212, 175, 55, 0.15); }
+        .leaderboard-item.top-2 { background: rgba(192, 192, 192, 0.1); }
+        .leaderboard-item.top-3 { background: rgba(205, 127, 50, 0.1); }
+
+        .game-screen {
+            display: none;
+        }
+
+        .game-screen.active {
+            display: block;
+        }
+
+        .menu-buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            background: rgba(231, 76, 60, 0.2);
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            color: #e74c3c;
+            font-size: 1em;
+            margin: 15px 0;
+        }
+
+        audio {
+            display: none;
+        }
+
+        .category-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .category-tab {
+            padding: 12px;
+            background: linear-gradient(135deg, #2E3A59, #1A1A1A);
+            border: 2px solid #B87333;
+            border-radius: 10px;
+            color: #F5F5F5;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-tab.active {
+            background: linear-gradient(135deg, #D4AF37, #B87333);
+            border-color: #D4AF37;
+            color: #0D0D0D;
+        }
+
+        .category-tab:active {
+            transform: scale(0.98);
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 0; }
+            .container { padding: 8px; }
+            h1 { font-size: 1.8em; }
+            .role-buttons { gap: 8px; }
+            .options-grid { gap: 8px; }
+            .role-selection h2 { font-size: 1.5em; }
+            .game-header { font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">در حال بارگذاری...</div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>🎵 شنوتو 🎭</h1>
+            <p class="tagline">موسیقی را بشناسید، امتیاز کسب کنید</p>
+        </header>
+
+        <!-- Category Selection Screen -->
+        <div id="categoryScreen" class="role-selection">
+            <h2>دسته‌بندی را انتخاب کنید</h2>
+            <div class="role-buttons">
+                <button class="role-btn" data-role="lyricist">✍️ ترانه‌سرا</button>
+                <button class="role-btn" data-role="composer">🎹 آهنگساز</button>
+                <button class="role-btn" data-role="arranger">🎼 تنظیم‌کننده</button>
+            </div>
+            <div class="menu-buttons">
+                <button class="leaderboard-btn" id="leaderboardBtnMain">🏆 جدول امتیازات</button>
+            </div>
+            <div id="categoryMessage"></div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="game-screen">
+            <div class="game-header">
+                <div class="level-badge">سطح: <span id="levelDisplay">1</span></div>
+                <div class="level-info" id="roleDisplay"></div>
+                <div class="score-badge">امتیاز: <span id="scoreDisplay">0</span></div>
+            </div>
+
+            <div class="track-info" id="trackInfo">
+                <div class="track-details">
+                    <span class="singer-name" id="singerName"></span>
+                    <span class="separator">—</span>
+                    <span class="track-name" id="trackName"></span>
+                </div>
+                <button class="play-pause-btn" id="playPauseBtn">▶️</button>
+            </div>
+
+            <div class="status" id="status">برای شروع بازی دکمه شروع را بزنید!</div>
+
+            <div class="options-grid" id="optionsGrid"></div>
+
+            <div class="menu-buttons">
+                <button class="start-btn" id="startBtn">🎲 شروع بازی</button>
+                <button class="menu-btn" id="menuBtn">← برگشت</button>
+            </div>
+
+            <audio id="audioPlayer"></audio>
+        </div>
+
+        <!-- Leaderboard Screen -->
+        <div id="leaderboardScreen" class="leaderboard-screen">
+            <h2 style="color: #D4AF37; text-align: center; margin: 20px 0;">🏆 جدول امتیازات</h2>
+            
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="lyricist" onclick="switchLeaderboardCategory('lyricist')">✍️ ترانه‌سرا</button>
+                <button class="category-tab" data-category="composer" onclick="switchLeaderboardCategory('composer')">🎹 آهنگساز</button>
+                <button class="category-tab" data-category="arranger" onclick="switchLeaderboardCategory('arranger')">🎼 تنظیم‌کننده</button>
+            </div>
+
+            <div id="categoryLeaderboards">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div class="menu-buttons" style="margin-top: 30px;">
+                <button class="menu-btn" id="backFromLeaderboard">← برگشت</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <script>
+        // Initialize Telegram Web App
+        let tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
+            authDomain: "shenoto-e26f5.firebaseapp.com",
+            projectId: "shenoto-e26f5",
+            storageBucket: "shenoto-e26f5.firebasestorage.app",
+            messagingSenderId: "276107336693",
+            appId: "1:276107336693:web:249f30844ff11b1ef99ebc"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Game State
+        let gameState = {
+            userId: null,
+            username: null,
+            currentRole: null,
+            currentLevel: 1,
+            currentTrack: null,
+            correctArtist: null,
+            options: [],
+            score: 0,
+            levelScore: 0,
+            categoryScores: { lyricist: 0, composer: 0, arranger: 0 },
+            artists: [],
+            tracks: [],
+            gameActive: false,
+            isAnswered: false,
+            correctAnswers: 0,
+            wrongAnswers: 0
+        };
+
+        const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+        
+        function toPersianNumber(num) {
+            return num.toString().split('').map(digit => persianDigits[parseInt(digit)] || digit).join('');
+        }
+
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Initialize user
+        function initializeUser() {
+            if (tg && tg.initDataUnsafe?.user) {
+                const user = tg.initDataUnsafe.user;
+                gameState.options = shuffle([...selectedOthers, gameState.correctArtist]);
+
+            // Display track info
+            document.getElementById('singerName').textContent = track.singer;
+            document.getElementById('trackName').textContent = track.name;
+            
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = track.url;
+            audioPlayer.play();
+            document.getElementById('playPauseBtn').textContent = '⏸️';
+            
+            document.getElementById('status').textContent = '🎵 با دقت گوش دهید! (' + toPersianNumber(optionsCount) + ' گزینه)';
+            document.getElementById('status').classList.add('playing');
+
+            displayOptions();
+            updateDisplay();
+        }
+
+        // Display options
+        function displayOptions() {
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+
+            gameState.options.forEach(artist => {
+                const card = document.createElement('div');
+                card.className = 'option-card';
+                card.textContent = artist.name;
+                card.addEventListener('click', () => handleGuess(artist, card));
+                grid.appendChild(card);
+            });
+        }
+
+        // Toggle play/pause
+        function togglePlayPause() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                document.getElementById('playPauseBtn').textContent = '⏸️';
+            } else {
+                audioPlayer.pause();
+                document.getElementById('playPauseBtn').textContent = '▶️';
+            }
+        }
+
+        // Handle guess
+        function handleGuess(artist, card) {
+            if (gameState.isAnswered) return;
+            gameState.isAnswered = true;
+
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.pause();
+
+            const allCards = document.querySelectorAll('.option-card');
+            allCards.forEach(c => c.classList.add('disabled'));
+
+            const correctCard = Array.from(allCards).find(
+                c => c.textContent === gameState.correctArtist.name
+            );
+
+            if (artist.id === gameState.correctArtist.id) {
+                card.classList.add('correct');
+                
+                // Calculate points: 100 * level
+                const points = 100 * gameState.currentLevel;
+                gameState.levelScore += points;
+                gameState.score += points;
+                gameState.categoryScores[gameState.currentRole] = gameState.score;
+                gameState.correctAnswers++;
+                
+                document.getElementById('status').textContent = `✓ درست است! +${toPersianNumber(points)} امتیاز!`;
+                document.getElementById('status').style.color = '#2ecc71';
+
+                savePlayerScore();
+                
+                setTimeout(() => {
+                    showRoundResult(true, points);
+                }, 1500);
+            } else {
+                card.classList.add('wrong');
+                correctCard?.classList.add('correct');
+                
+                const penalty = 50 * gameState.currentLevel;
+                gameState.score = Math.max(0, gameState.score - penalty);
+                gameState.categoryScores[gameState.currentRole] = gameState.score;
+                gameState.wrongAnswers++;
+                
+                document.getElementById('status').textContent = `❌ اشتباه! -${toPersianNumber(penalty)} امتیاز!`;
+                document.getElementById('status').style.color = '#e74c3c';
+
+                savePlayerScore();
+                
+                setTimeout(() => {
+                    showRoundResult(false, -penalty);
+                }, 1500);
+            }
+        }
+
+        // Show round result
+        function showRoundResult(isCorrect, points) {
+            const resultHTML = `
+                <div class="result-section">
+                    <h2>${isCorrect ? '✓ درست است!' : '❌ اشتباه!'}</h2>
+                    <div class="artist-reveal">
+                        <h3>${gameState.correctArtist.name}</h3>
+                        ${gameState.correctArtist.bio ? `<p>${gameState.correctArtist.bio}</p>` : ''}
+                    </div>
+                    <div class="points-display">
+                        ${isCorrect ? '+' : ''}${toPersianNumber(Math.abs(points))} امتیاز
+                    </div>
+                    <div class="session-stats">
+                        <div class="stat-box">
+                            <div class="stat-label">سطح</div>
+                            <div class="stat-value">${toPersianNumber(gameState.currentLevel)}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">کل امتیاز</div>
+                            <div class="stat-value">${toPersianNumber(gameState.score.toFixed(0))}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">صحیح</div>
+                            <div class="stat-value">${toPersianNumber(gameState.correctAnswers)}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">اشتباه</div>
+                            <div class="stat-value">${toPersianNumber(gameState.wrongAnswers)}</div>
+                        </div>
+                    </div>
+                    <div class="menu-buttons">
+                        <button class="next-btn" onclick="nextRound()">دور بعدی →</button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('optionsGrid').innerHTML = resultHTML;
+        }
+
+        // Next round
+        window.nextRound = function() {
+            gameState.currentLevel++;
+            gameState.gameActive = false;
+            gameState.isAnswered = false;
+            document.getElementById('optionsGrid').innerHTML = '';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('status').textContent = 'برای شروع دور بعدی دکمه شروع را بزنید!';
+            document.getElementById('status').classList.remove('playing');
+            document.getElementById('status').style.color = '#A0A0A0';
+            updateDisplay();
+        };
+
+        // Return to menu
+        function returnToMenu() {
+            if (confirm('آیا از برگشت به منو اطمینان دارید؟')) {
+                document.getElementById('gameScreen').classList.remove('active');
+                document.getElementById('categoryScreen').style.display = 'block';
+                document.getElementById('optionsGrid').innerHTML = '';
+                gameState.currentLevel = 1;
+                gameState.score = 0;
+                gameState.levelScore = 0;
+                gameState.correctAnswers = 0;
+                gameState.wrongAnswers = 0;
+            }
+        }
+
+        // Show leaderboard
+        async function showLeaderboard() {
+            document.getElementById('categoryScreen').style.display = 'none';
+            document.getElementById('leaderboardScreen').classList.add('active');
+            await loadLeaderboardData('lyricist');
+        }
+
+        // Switch leaderboard category
+        async function switchLeaderboardCategory(category) {
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            await loadLeaderboardData(category);
+        }
+
+        // Load leaderboard data
+        async function loadLeaderboardData(category) {
+            try {
+                const snapshot = await db.collection('players').get();
+                const players = [];
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    players.push({
+                        username: data.username,
+                        score: data.scores?.[category] || 0,
+                        userId: data.userId
+                    });
+                });
+
+                // Sort by score descending
+                players.sort((a, b) => b.score - a.score);
+
+                // Display top 10
+                const leaderboardHTML = `
+                    <div class="leaderboard-list">
+                        ${players.slice(0, 10).map((player, index) => `
+                            <div class="leaderboard-item ${index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : ''}">
+                                <div class="leaderboard-rank">${toPersianNumber(index + 1)}</div>
+                                <div class="leaderboard-name">${player.username}</div>
+                                <div class="leaderboard-score">${toPersianNumber(player.score.toFixed(0))}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                document.getElementById('categoryLeaderboards').innerHTML = leaderboardHTML;
+
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+            }
+        }
+
+        // Back from leaderboard
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('backFromLeaderboard').addEventListener('click', function() {
+                document.getElementById('leaderboardScreen').classList.remove('active');
+                document.getElementById('categoryScreen').style.display = 'block';
+            });
+        });
+
+        // Initialize
+        initializeUser();
+        loadDataFromFirebase();userId = user.id.toString();
+                gameState.username = user.username || user.first_name || 'بازیکن';
+            } else {
+                gameState.userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                gameState.username = 'بازیکن';
+            }
+        }
+
+        // Load data from Firebase
+        async function loadDataFromFirebase() {
+            try {
+                const artistsSnapshot = await db.collection('artists').get();
+                gameState.artists = artistsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                const tracksSnapshot = await db.collection('tracks').get();
+                gameState.tracks = tracksSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                // Load player scores
+                await loadPlayerScores();
+
+                document.getElementById('loadingOverlay').style.display = 'none';
+                setupCategorySelection();
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('categoryMessage').innerHTML = `
+                    <div class="error-message">خطا در بارگذاری داده‌ها. لطفاً صفحه را رفرش کنید.</div>
+                `;
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+
+        // Load player scores
+        async function loadPlayerScores() {
+            try {
+                const playerDoc = await db.collection('players').doc(gameState.userId).get();
+                if (playerDoc.exists) {
+                    const data = playerDoc.data();
+                    gameState.categoryScores = data.scores || { lyricist: 0, composer: 0, arranger: 0 };
+                }
+            } catch (error) {
+                console.error('Error loading player scores:', error);
+            }
+        }
+
+        // Save player score
+        async function savePlayerScore() {
+            try {
+                await db.collection('players').doc(gameState.userId).set({
+                    username: gameState.username,
+                    scores: gameState.categoryScores,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                    userId: gameState.userId
+                }, { merge: true });
+            } catch (error) {
+                console.error('Error saving scores:', error);
+            }
+        }
+
+        // Setup category selection
+        function setupCategorySelection() {
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    gameState.currentRole = this.dataset.role;
+                    
+                    setTimeout(() => {
+                        startGame(gameState.currentRole);
+                    }, 300);
+                });
+            });
+
+            document.getElementById('leaderboardBtnMain').addEventListener('click', showLeaderboard);
+        }
+
+        // Start game
+        function startGame(role) {
+            document.getElementById('categoryScreen').style.display = 'none';
+            document.getElementById('gameScreen').classList.add('active');
+            
+            const roleNames = {
+                'lyricist': 'ترانه‌سرا',
+                'composer': 'آهنگساز',
+                'arranger': 'تنظیم‌کننده'
+            };
+            
+            gameState.currentLevel = 1;
+            gameState.levelScore = 0;
+            gameState.correctAnswers = 0;
+            gameState.wrongAnswers = 0;
+            gameState.score = gameState.categoryScores[role] || 0;
+            
+            document.getElementById('roleDisplay').textContent = `🎵 ${roleNames[role]}`;
+            updateDisplay();
+
+            document.getElementById('startBtn').addEventListener('click', playTrack);
+            document.getElementById('menuBtn').addEventListener('click', returnToMenu);
+            document.getElementById('playPauseBtn').addEventListener('click', togglePlayPause);
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('levelDisplay').textContent = toPersianNumber(gameState.currentLevel);
+            document.getElementById('scoreDisplay').textContent = toPersianNumber(gameState.score.toFixed(0));
+        }
+
+        // Get filtered artists for role
+        function getArtistsForRole(role) {
+            const artistMap = new Map();
+            
+            gameState.tracks.forEach(track => {
+                const artistId = track[role];
+                if (artistId) {
+                    const artist = gameState.artists.find(a => a.id === artistId);
+                    if (artist) {
+                        if (!artistMap.has(artistId)) {
+                            artistMap.set(artistId, {
+                                id: artistId,
+                                name: artist.name,
+                                bio: artist.bio,
+                                tracks: []
+                            });
+                        }
+                        
+                        const singer = track.singer ? gameState.artists.find(a => a.id === track.singer) : null;
+                        artistMap.get(artistId).tracks.push({
+                            url: track.track_url,
+                            name: track.track_name,
+                            singer: singer ? singer.name : 'نامشخص'
+                        });
+                    }
+                }
+            });
+            
+            return Array.from(artistMap.values());
+        }
+
+        // Play track
+        function playTrack() {
+            if (gameState.gameActive) return;
+
+            gameState.gameActive = true;
+            gameState.isAnswered = false;
+            document.getElementById('startBtn').disabled = true;
+
+            const artists = getArtistsForRole(gameState.currentRole);
+            if (artists.length === 0) {
+                alert('داده‌ای برای این دسته وجود ندارد');
+                document.getElementById('startBtn').disabled = false;
+                return;
+            }
+
+            // Get options count based on level: 3 options at level 1, +1 each level
+            const optionsCount = Math.min(3 + (gameState.currentLevel - 1), artists.length);
+            
+            // Select random artist
+            const randomIndex = Math.floor(Math.random() * artists.length);
+            gameState.correctArtist = artists[randomIndex];
+            
+            // Select random track
+            const track = gameState.correctArtist.tracks[
+                Math.floor(Math.random() * gameState.correctArtist.tracks.length)
+            ];
+            gameState.currentTrack = track;
+
+            // Get options
+            const otherArtists = artists.filter((_, i) => i !== randomIndex);
+            const shuffled = shuffle(otherArtists);
+            const selectedOthers = shuffled.slice(0, optionsCount - 1);
+            
+            gameState.
