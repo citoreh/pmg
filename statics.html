@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آمار بازی - شنوتو</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 50%, #2E3A59 100%);
+            min-height: 100vh;
+            color: #F5F5F5;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(26, 26, 26, 0.8);
+            border-radius: 20px;
+            border: 2px solid #D4AF37;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #D4AF37, #B87333);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            color: #A0A0A0;
+            font-size: 1.1em;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #2E3A59, #1A1A1A);
+            border: 2px solid #D4AF37;
+            border-radius: 12px;
+            color: #F5F5F5;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(46, 58, 89, 0.4), rgba(26, 26, 26, 0.6));
+            border: 2px solid #B87333;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: #D4AF37;
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+        }
+
+        .stat-card h3 {
+            color: #D4AF37;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            color: #A0A0A0;
+            font-size: 1.1em;
+        }
+
+        .stat-card.positive {
+            border-color: #2ecc71;
+        }
+
+        .stat-card.positive h3 {
+            color: #2ecc71;
+        }
+
+        .stat-card.negative {
+            border-color: #e74c3c;
+        }
+
+        .stat-card.negative h3 {
+            color: #e74c3c;
+        }
+
+        .filters {
+            background: rgba(26, 26, 26, 0.6);
+            border: 2px solid #B87333;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-group label {
+            color: #D4AF37;
+            font-weight: bold;
+        }
+
+        select, input {
+            padding: 10px 15px;
+            border: 2px solid #B87333;
+            border-radius: 8px;
+            background: rgba(13, 13, 13, 0.8);
+            color: #F5F5F5;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #D4AF37;
+        }
+
+        button {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #D4AF37, #B87333);
+            border: none;
+            border-radius: 10px;
+            color: #0D0D0D;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .leaderboard {
+            background: rgba(26, 26, 26, 0.6);
+            border: 2px solid #D4AF37;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .leaderboard h2 {
+            color: #D4AF37;
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid #B87333;
+            padding-bottom: 15px;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .leaderboard-table thead {
+            background: rgba(212, 175, 55, 0.2);
+        }
+
+        .leaderboard-table th {
+            padding: 15px;
+            color: #D4AF37;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #B87333;
+        }
+
+        .leaderboard-table td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(184, 115, 51, 0.3);
+            background: rgba(13, 13, 13, 0.3);
+        }
+
+        .leaderboard-table tr:hover td {
+            background: rgba(46, 58, 89, 0.3);
+        }
+
+        .rank {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .rank-1 {
+            color: #FFD700;
+        }
+
+        .rank-2 {
+            color: #C0C0C0;
+        }
+
+        .rank-3 {
+            color: #CD7F32;
+        }
+
+        .positive-score {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .negative-score {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .total-score {
+            color: #D4AF37;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #D4AF37;
+            font-size: 1.3em;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #A0A0A0;
+            font-size: 1.2em;
+        }
+
+        .chart-container {
+            background: rgba(26, 26, 26, 0.6);
+            border: 2px solid #B87333;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container h2 {
+            color: #D4AF37;
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .user-detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1A1A1A, #2E3A59);
+            border: 3px solid #D4AF37;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #B87333;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h3 {
+            color: #D4AF37;
+            font-size: 1.8em;
+        }
+
+        .close-modal {
+            background: transparent;
+            color: #e74c3c;
+            font-size: 1.5em;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .user-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .user-stat-item {
+            background: rgba(46, 58, 89, 0.3);
+            border: 2px solid #B87333;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .user-stat-item .label {
+            color: #A0A0A0;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .user-stat-item .value {
+            color: #D4AF37;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .stats-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .leaderboard-table {
+                font-size: 0.9em;
+            }
+
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: 10px 5px;
+            }
+
+            .back-btn {
+                position: static;
+                display: block;
+                margin: 0 auto 20px;
+                width: fit-content;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn">← بازگشت به بازی</a>
+
+    <div class="container">
+        <header>
+            <h1>📊 آمار و رتبه‌بندی بازی</h1>
+            <p class="tagline">عملکرد بازیکنان و آمار کلی</p>
+        </header>
+
+        <div class="stats-summary">
+            <div class="stat-card">
+                <h3 id="totalPlayers">۰</h3>
+                <p>🎮 تعداد بازیکنان</p>
+            </div>
+            <div class="stat-card positive">
+                <h3 id="totalPositive">۰</h3>
+                <p>✓ مجموع امتیازات مثبت</p>
+            </div>
+            <div class="stat-card negative">
+                <h3 id="totalNegative">۰</h3>
+                <p>✗ مجموع امتیازات منفی</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="totalGames">۰</h3>
+                <p>🎲 کل بازی‌ها</p>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>مرتب‌سازی:</label>
+                <select id="sortBy" onchange="updateLeaderboard()">
+                    <option value="total">امتیاز کل</option>
+                    <option value="positive">امتیاز مثبت</option>
+                    <option value="negative">امتیاز منفی</option>
+                    <option value="games">تعداد بازی</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>جستجو:</label>
+                <input type="text" id="searchInput" placeholder="نام کاربری..." onkeyup="updateLeaderboard()">
+            </div>
+            <button onclick="refreshStats()">🔄 به‌روزرسانی</button>
+            <button onclick="exportStats()">📥 دانلود آمار</button>
+        </div>
+
+        <div class="leaderboard">
+            <h2>🏆 جدول رتبه‌بندی</h2>
+            <div id="leaderboardContent" class="loading">در حال بارگذاری...</div>
+        </div>
+    </div>
+
+    <div id="userDetailModal" class="user-detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>جزئیات بازیکن</h3>
+                <button class="close-modal" onclick="closeUserDetail()">✕</button>
+            </div>
+            <div id="userDetailContent"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAUUfcl7mEJ3Jw5SiA7dL_0BX4XouZ0kWs",
+            authDomain: "shenoto-e26f5.firebaseapp.com",
+            projectId: "shenoto-e26f5",
+            storageBucket: "shenoto-e26f5.firebasestorage.app",
+            messagingSenderId: "276107336693",
+            appId: "1:276107336693:web:249f30844ff11b1ef99ebc",
+            measurementId: "G-4L3KBNR48S"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let playerStats = [];
+
+        const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+        function toPersianNumber(num) {
+            return num.toString().split('').map(digit => persianDigits[parseInt(digit)] || digit).join('');
+        }
+
+        async function loadStats() {
+            try {
+                const snapshot = await db.collection('player_stats').get();
+                playerStats = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                updateSummaryStats();
+                updateLeaderboard();
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('leaderboardContent').innerHTML = 
+                    '<div class="no-data">خطا در بارگذاری اطلاعات</div>';
+            }
+        }
+
+        function updateSummaryStats() {
+            const totalPlayers = playerStats.length;
+            const totalPositive = playerStats.reduce((sum, p) => sum + (p.positiveScore || 0), 0);
+            const totalNegative = playerStats.reduce((sum, p) => sum + (p.negativeScore || 0), 0);
+            const totalGames = playerStats.reduce((sum, p) => sum + (p.gamesPlayed || 0), 0);
+
+            document.getElementById('totalPlayers').textContent = toPersianNumber(totalPlayers);
+            document.getElementById('totalPositive').textContent = toPersianNumber(totalPositive.toFixed(1));
+            document.getElementById('totalNegative').textContent = toPersianNumber(totalNegative.toFixed(1));
+            document.getElementById('totalGames').textContent = toPersianNumber(totalGames);
+        }
+
+        function updateLeaderboard() {
+            const sortBy = document.getElementById('sortBy').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = playerStats.filter(player => 
+                (player.username || player.id).toLowerCase().includes(searchTerm)
+            );
+
+            filtered.sort((a, b) => {
+                switch(sortBy) {
+                    case 'positive':
+                        return (b.positiveScore || 0) - (a.positiveScore || 0);
+                    case 'negative':
+                        return (b.negativeScore || 0) - (a.negativeScore || 0);
+                    case 'games':
+                        return (b.gamesPlayed || 0) - (a.gamesPlayed || 0);
+                    default:
+                        const aTotal = (a.positiveScore || 0) - (a.negativeScore || 0);
+                        const bTotal = (b.positiveScore || 0) - (b.negativeScore || 0);
+                        return bTotal - aTotal;
+                }
+            });
+
+            if (filtered.length === 0) {
+                document.getElementById('leaderboardContent').innerHTML = 
+                    '<div class="no-data">هیچ بازیکنی یافت نشد</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>رتبه</th>
+                            <th>شناسه بازیکن</th>
+                            <th>امتیاز مثبت</th>
+                            <th>امتیاز منفی</th>
+                            <th>امتیاز کل</th>
+                            <th>تعداد بازی</th>
+                            <th>جزئیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filtered.map((player, index) => {
+                            const rank = index + 1;
+                            const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+                            const totalScore = (player.positiveScore || 0) - (player.negativeScore || 0);
+                            
+                            return `
+                                <tr>
+                                    <td class="rank ${rankClass}">${getRankEmoji(rank)} ${toPersianNumber(rank)}</td>
+                                    <td>${player.username || player.id.substring(0, 8)}</td>
+                                    <td class="positive-score">+${toPersianNumber((player.positiveScore || 0).toFixed(1))}</td>
+                                    <td class="negative-score">-${toPersianNumber((player.negativeScore || 0).toFixed(1))}</td>
+                                    <td class="total-score">${toPersianNumber(totalScore.toFixed(1))}</td>
+                                    <td>${toPersianNumber(player.gamesPlayed || 0)}</td>
+                                    <td><button onclick="showUserDetail('${player.id}')">مشاهده</button></td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('leaderboardContent').innerHTML = tableHTML;
+        }
+
+        function getRankEmoji(rank) {
+            if (rank === 1) return '🥇';
+            if (rank === 2) return '🥈';
+            if (rank === 3) return '🥉';
+            return '🏅';
+        }
+
+        function showUserDetail(userId) {
+            const player = playerStats.find(p => p.id === userId);
+            if (!player) return;
+
+            const totalScore = (player.positiveScore || 0) - (player.negativeScore || 0);
+            const avgPositive = player.gamesPlayed ? (player.positiveScore / player.gamesPlayed).toFixed(1) : 0;
+            const avgNegative = player.gamesPlayed ? (player.negativeScore / player.gamesPlayed).toFixed(1) : 0;
+
+            const content = `
+                <div class="user-stats">
+                    <div class="user-stat-item">
+                        <div class="label">شناسه</div>
+                        <div class="value" style="font-size: 1em;">${player.username || player.id.substring(0, 12)}</div>
+                    </div>
+                    <div class="user-stat-item">
+                        <div class="label">امتیاز کل</div>
+                        <div class="value">${toPersianNumber(totalScore.toFixed(1))}</div>
+                    </div>
+                    <div class="user-stat-item">
+                        <div class="label">امتیاز مثبت</div>
+                        <div class="value" style="color: #2ecc71;">+${toPersianNumber((player.positiveScore || 0).toFixed(1))}</div>
+                    </div>
+                    <div class="user-stat-item">
+                        <div class="label">امتیاز منفی</div>
+                        <div class="value" style="color: #e74c3c;">-${toPersianNumber((player.negativeScore || 0).toFixed(1))}</div>
+                    </div>
+                    <div class="user-stat-item">
+                        <div class="label">تعداد بازی</div>
+                        <div class="value">${toPersianNumber(player.gamesPlayed || 0)}</div>
+                    </div>
+                    <div class="user-stat-item">
+                        <div class="label">میانگین مثبت</div>
+                        <div class="value" style="color: #2ecc71;">${toPersianNumber(avgPositive)}</div>
+                    </div>
+                    <div class="user-stat-item">
+                        <div class="label">میانگین منفی</div>
+                        <div class="value" style="color: #e74c3c;">${toPersianNumber(avgNegative)}</div>
+                    </div>
+                    <div class="user-stat-item">
+                        <div class="label">تاریخ ثبت</div>
+                        <div class="value" style="font-size: 0.9em;">${player.createdAt ? new Date(player.createdAt.seconds * 1000).toLocaleDateString('fa-IR') : 'نامشخص'}</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('userDetailContent').innerHTML = content;
+            document.getElementById('userDetailModal').style.display = 'flex';
+        }
+
+        function closeUserDetail() {
+            document.getElementById('userDetailModal').style.display = 'none';
+        }
+
+        function refreshStats() {
+            document.getElementById('leaderboardContent').innerHTML = '<div class="loading">در حال به‌روزرسانی...</div>';
+            loadStats();
+        }
+
+        function exportStats() {
+            const data = {
+                exportDate: new Date().toISOString(),
+                summary: {
+                    totalPlayers: playerStats.length,
+                    totalPositive: playerStats.reduce((sum, p) => sum + (p.positiveScore || 0), 0),
+                    totalNegative: playerStats.reduce((sum, p) => sum + (p.negativeScore || 0), 0),
+                    totalGames: playerStats.reduce((sum, p) => sum + (p.gamesPlayed || 0), 0)
+                },
+                players: playerStats
+            };
+
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'shenoto-stats-' + Date.now() + '.json';
+            a.click();
+        }
+
+        loadStats();
+    </script>
+</body>
+</html>
