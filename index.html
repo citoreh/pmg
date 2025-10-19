@@ -887,16 +887,78 @@
         }
 
         // Back from leaderboard
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('backFromLeaderboard').addEventListener('click', function() {
-                document.getElementById('leaderboardScreen').classList.remove('active');
-                document.getElementById('categoryScreen').style.display = 'block';
+        document.getElementById('backFromLeaderboard').addEventListener('click', function() {
+            document.getElementById('leaderboardScreen').classList.remove('active');
+            document.getElementById('categoryScreen').style.display = 'block';
+        });
+
+        // Initialize when page is ready
+        window.addEventListener('load', function() {
+            console.log('Page loaded, initializing...');
+            initializeUser();
+            
+            // Set timeout for loading
+            const loadTimeout = setTimeout(() => {
+                console.error('Loading timeout - showing error');
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('categoryMessage').innerHTML = `
+                    <div class="error-message">
+                        خطا در بارگذاری داده‌ها. اتصال اینترنت خود را بررسی کنید.
+                        <br><button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #D4AF37; color: #0D0D0D; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">تلاش دوباره</button>
+                    </div>
+                `;
+            }, 15000);
+
+            loadDataFromFirebase().then(() => {
+                clearTimeout(loadTimeout);
+            }).catch((error) => {
+                clearTimeout(loadTimeout);
+                console.error('Loading error:', error);
             });
         });
 
-        // Initialize
-        initializeUser();
-        loadDataFromFirebase();userId = user.id.toString();
+        // Fallback if page already loaded
+        if (document.readyState === 'complete') {
+            console.log('Document already complete');
+            initializeUser();
+            
+            const loadTimeout = setTimeout(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('categoryMessage').innerHTML = `
+                    <div class="error-message">
+                        خطا در بارگذاری داده‌ها.
+                        <br><button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #D4AF37; color: #0D0D0D; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">تلاش دوباره</button>
+                    </div>
+                `;
+            }, 15000);
+
+            loadDataFromFirebase().then(() => {
+                clearTimeout(loadTimeout);
+            }).catch((error) => {
+                clearTimeout(loadTimeout);
+            });
+        } else if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('DOM Content Loaded');
+                initializeUser();
+                
+                const loadTimeout = setTimeout(() => {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    document.getElementById('categoryMessage').innerHTML = `
+                        <div class="error-message">
+                            خطا در بارگذاری داده‌ها.
+                            <br><button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #D4AF37; color: #0D0D0D; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">تلاش دوباره</button>
+                        </div>
+                    `;
+                }, 15000);
+
+                loadDataFromFirebase().then(() => {
+                    clearTimeout(loadTimeout);
+                }).catch((error) => {
+                    clearTimeout(loadTimeout);
+                });
+            });
+        }userId = user.id.toString();
                 gameState.username = user.username || user.first_name || 'بازیکن';
             } else {
                 gameState.userId = 'user_' + Math.random().toString(36).substr(2, 9);
@@ -919,6 +981,9 @@
                     ...doc.data()
                 }));
 
+                console.log('Artists loaded:', gameState.artists.length);
+                console.log('Tracks loaded:', gameState.tracks.length);
+
                 // Load player scores
                 await loadPlayerScores();
 
@@ -927,10 +992,13 @@
 
             } catch (error) {
                 console.error('Error loading data:', error);
-                document.getElementById('categoryMessage').innerHTML = `
-                    <div class="error-message">خطا در بارگذاری داده‌ها. لطفاً صفحه را رفرش کنید.</div>
-                `;
                 document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('categoryMessage').innerHTML = `
+                    <div class="error-message">
+                        خطا در بارگذاری داده‌ها: ${error.message}
+                        <br><button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #D4AF37; color: #0D0D0D; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">تلاش دوباره</button>
+                    </div>
+                `;
             }
         }
 
