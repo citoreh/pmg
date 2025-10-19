@@ -610,11 +610,14 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <script>
+        console.log('Scripts loading...');
+        
         // Initialize Telegram Web App
         let tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
             tg.expand();
+            console.log('Telegram initialized');
         }
 
         // Firebase configuration
@@ -627,8 +630,14 @@
             appId: "1:276107336693:web:249f30844ff11b1ef99ebc"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase init error:', error);
+        }
 
         // Game State
         let gameState = {
@@ -893,71 +902,46 @@
         });
 
         // Initialize when page is ready
-        window.addEventListener('load', function() {
-            console.log('Page loaded, initializing...');
-            initializeUser();
-            
-            // Set timeout for loading
-            const loadTimeout = setTimeout(() => {
-                console.error('Loading timeout - showing error');
-                document.getElementById('loadingOverlay').style.display = 'none';
-                document.getElementById('categoryMessage').innerHTML = `
-                    <div class="error-message">
-                        خطا در بارگذاری داده‌ها. اتصال اینترنت خود را بررسی کنید.
-                        <br><button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #D4AF37; color: #0D0D0D; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">تلاش دوباره</button>
-                    </div>
-                `;
-            }, 15000);
-
-            loadDataFromFirebase().then(() => {
-                clearTimeout(loadTimeout);
-            }).catch((error) => {
-                clearTimeout(loadTimeout);
-                console.error('Loading error:', error);
-            });
-        });
-
-        // Fallback if page already loaded
-        if (document.readyState === 'complete') {
-            console.log('Document already complete');
-            initializeUser();
-            
-            const loadTimeout = setTimeout(() => {
-                document.getElementById('loadingOverlay').style.display = 'none';
-                document.getElementById('categoryMessage').innerHTML = `
-                    <div class="error-message">
-                        خطا در بارگذاری داده‌ها.
-                        <br><button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #D4AF37; color: #0D0D0D; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">تلاش دوباره</button>
-                    </div>
-                `;
-            }, 15000);
-
-            loadDataFromFirebase().then(() => {
-                clearTimeout(loadTimeout);
-            }).catch((error) => {
-                clearTimeout(loadTimeout);
-            });
-        } else if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('DOM Content Loaded');
+        function startApp() {
+            console.log('startApp called');
+            try {
                 initializeUser();
+                console.log('User initialized');
                 
+                // Set timeout for loading
                 const loadTimeout = setTimeout(() => {
+                    console.error('Loading timeout reached');
                     document.getElementById('loadingOverlay').style.display = 'none';
                     document.getElementById('categoryMessage').innerHTML = `
                         <div class="error-message">
-                            خطا در بارگذاری داده‌ها.
-                            <br><button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #D4AF37; color: #0D0D0D; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">تلاش دوباره</button>
+                            <strong>خطا:</strong> مهلت زمانی بارگذاری تمام شد
+                            <br><br>
+                            <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #D4AF37; color: #0D0D0D; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">تلاش دوباره</button>
                         </div>
                     `;
-                }, 15000);
+                }, 20000);
 
                 loadDataFromFirebase().then(() => {
+                    console.log('Data loaded successfully');
                     clearTimeout(loadTimeout);
                 }).catch((error) => {
+                    console.error('Data loading failed:', error);
                     clearTimeout(loadTimeout);
                 });
-            });
+            } catch (error) {
+                console.error('App start error:', error);
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('categoryMessage').innerHTML = `<div class="error-message">خطا: ${error.message}</div>`;
+            }
+        }
+
+        // Start app when DOM is ready
+        if (document.readyState === 'loading') {
+            console.log('DOM still loading, waiting...');
+            document.addEventListener('DOMContentLoaded', startApp);
+        } else {
+            console.log('DOM already loaded, starting app');
+            startApp();
         }userId = user.id.toString();
                 gameState.username = user.username || user.first_name || 'بازیکن';
             } else {
@@ -969,34 +953,45 @@
         // Load data from Firebase
         async function loadDataFromFirebase() {
             try {
+                console.log('Starting to load data...');
+                
+                if (!db) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                console.log('Fetching artists...');
                 const artistsSnapshot = await db.collection('artists').get();
                 gameState.artists = artistsSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
+                console.log('Artists loaded:', gameState.artists.length);
 
+                console.log('Fetching tracks...');
                 const tracksSnapshot = await db.collection('tracks').get();
                 gameState.tracks = tracksSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
-
-                console.log('Artists loaded:', gameState.artists.length);
                 console.log('Tracks loaded:', gameState.tracks.length);
 
                 // Load player scores
                 await loadPlayerScores();
+                console.log('Player scores loaded');
 
+                console.log('Data loading complete, hiding overlay');
                 document.getElementById('loadingOverlay').style.display = 'none';
                 setupCategorySelection();
+                console.log('Category selection setup complete');
 
             } catch (error) {
                 console.error('Error loading data:', error);
                 document.getElementById('loadingOverlay').style.display = 'none';
                 document.getElementById('categoryMessage').innerHTML = `
                     <div class="error-message">
-                        خطا در بارگذاری داده‌ها: ${error.message}
-                        <br><button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #D4AF37; color: #0D0D0D; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">تلاش دوباره</button>
+                        <strong>خطا:</strong> ${error.message}
+                        <br><br>
+                        <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #D4AF37; color: #0D0D0D; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">تلاش دوباره</button>
                     </div>
                 `;
             }
