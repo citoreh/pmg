@@ -325,6 +325,8 @@
                 <button class="btn btn-secondary" id="menuBtn">← برگشت</button>
             </div>
         </div>
+
+        <audio id="audioPlayer"></audio>
     </div>
 
     <!-- Firebase SDK -->
@@ -362,10 +364,46 @@
                 { id: '4', name: 'غلامحسین درویش', bio: 'نوازنده سنتور ماهر' }
             ],
             tracks: [
-                { id: '1', name: 'مرغ سحر', singer: '1', lyricist: '2', composer: '3', arranger: '4' },
-                { id: '2', name: 'هیچ کس را نمی‌شناسم', singer: '2', lyricist: '3', composer: '1', arranger: '2' },
-                { id: '3', name: 'برگ اول', singer: '3', lyricist: '4', composer: '2', arranger: '1' },
-                { id: '4', name: 'شب رفتن‌ها', singer: '1', lyricist: '1', composer: '4', arranger: '3' }
+                { 
+                    id: '1', 
+                    name: 'مرغ سحر', 
+                    singer: '1', 
+                    lyricist: '2', 
+                    composer: '3', 
+                    arranger: '4',
+                    track_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                    track_name: 'مرغ سحر'
+                },
+                { 
+                    id: '2', 
+                    name: 'هیچ کس را نمی‌شناسم', 
+                    singer: '2', 
+                    lyricist: '3', 
+                    composer: '1', 
+                    arranger: '2',
+                    track_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+                    track_name: 'هیچ کس را نمی‌شناسم'
+                },
+                { 
+                    id: '3', 
+                    name: 'برگ اول', 
+                    singer: '3', 
+                    lyricist: '4', 
+                    composer: '2', 
+                    arranger: '1',
+                    track_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+                    track_name: 'برگ اول'
+                },
+                { 
+                    id: '4', 
+                    name: 'شب رفتن‌ها', 
+                    singer: '1', 
+                    lyricist: '1', 
+                    composer: '4', 
+                    arranger: '3',
+                    track_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+                    track_name: 'شب رفتن‌ها'
+                }
             ]
         };
 
@@ -467,10 +505,11 @@
             gameState.correctArtist = gameState.artists[randomIndex];
             
             // Random track
-            const randomTrack = sampleData.tracks[Math.floor(Math.random() * sampleData.tracks.length)];
+            const randomTrack = gameState.tracks[Math.floor(Math.random() * gameState.tracks.length)];
+            gameState.currentTrack = randomTrack;
             
             document.getElementById('singerName').textContent = gameState.correctArtist.name;
-            document.getElementById('trackName').textContent = randomTrack.name;
+            document.getElementById('trackName').textContent = randomTrack.track_name || randomTrack.name;
             
             // Get options
             const otherArtists = gameState.artists.filter((_, i) => i !== randomIndex);
@@ -479,6 +518,15 @@
 
             document.getElementById('status').textContent = `🎵 با دقت گوش دهید! (${toPersianNumber(optionsCount)} گزینه)`;
             document.getElementById('status').classList.add('playing');
+
+            // Play audio
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = randomTrack.track_url;
+            audioPlayer.play().catch(error => {
+                console.error('Audio play error:', error);
+                document.getElementById('status').textContent = `⚠️ خطا در پخش صوت`;
+            });
+            document.getElementById('playPauseBtn').textContent = '⏸️';
 
             displayOptions();
             updateDisplay();
@@ -581,12 +629,26 @@
         // Return to menu
         document.getElementById('menuBtn').addEventListener('click', function() {
             if (confirm('آیا از برگشت به منو اطمینان دارید؟')) {
+                const audioPlayer = document.getElementById('audioPlayer');
+                audioPlayer.pause();
                 document.getElementById('gameScreen').classList.remove('active');
                 document.getElementById('categoryScreen').classList.remove('hidden');
                 document.getElementById('optionsGrid').innerHTML = '';
                 gameState.currentLevel = 1;
                 gameState.score = 0;
                 document.getElementById('startBtn').disabled = false;
+            }
+        });
+
+        // Play/Pause button
+        document.getElementById('playPauseBtn').addEventListener('click', function() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                this.textContent = '⏸️';
+            } else {
+                audioPlayer.pause();
+                this.textContent = '▶️';
             }
         });
 
